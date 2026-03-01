@@ -1,0 +1,31 @@
+services:
+  ansible-slave-01:
+    build:
+      context: .. # Assembly context - project root (where Docker-compose.yml is located)
+      dockerfile: ./ansible-slave/Dockerfile # Way to Dockerfile inside the context
+    container_name: ansible-slave-01
+    image: ansible-slave-image # We obviously indicate the name of the image
+    ports:
+      - "${SLV_EXT_PORT}:22"
+    volumes:
+      - shared-volume:/var/shared
+
+  ansible-master-01:
+    build:
+      context: ..
+      dockerfile: ./ansible-master/Dockerfile
+    image: ansible-master-image
+    container_name: ansible-master-01
+    ports:
+      - "${MST_EXT_PORT}:22"
+    volumes:
+      - shared-volume:/var/shared
+    
+networks:
+  default:
+    external: true
+    name: project-net
+
+volumes:
+  shared-volume:
+    external: true
