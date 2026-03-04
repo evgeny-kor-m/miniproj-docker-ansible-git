@@ -1,18 +1,21 @@
 services:
-  application-slave:
-    restart: always
+  application-crm:
     build:
-      context: .. # Assembly context - project root (where Docker-compose.yml is located)
+      context: ..
       dockerfile: ./app/Dockerfile # Way to Dockerfile inside the context
-    container_name: app-slave
-    image: app-slave-image # We obviously indicate the name of the image
+    container_name: app-crm
+    image: app-crm-image # We obviously indicate the name of the image
     ports:
       - "5000:5000"
     environment:
-      - DB_HOST=mysql-server
-      - DB_PORT=3306
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
     volumes:
       - shared-volume:/var/shared
+    restart: always
 
 networks:
   default:

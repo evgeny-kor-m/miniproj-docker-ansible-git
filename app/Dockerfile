@@ -1,15 +1,14 @@
-FROM evgenykorchev/ansible-slave-image:v01
+FROM python:3.8-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY ./app/requirements.txt .
 
-RUN apt-get update 
-
-COPY app/src/app_slave.py .
-
+#RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ./app .
 
 EXPOSE 5000
 
-CMD ["tail", "-f", "/dev/null"]
+CMD  ["python","src/app_crm.py"]

@@ -50,14 +50,20 @@ docker push evgenykorchev/ansible-master-image:v01
 
 ### Part 2
 ## Dockerfile – Application
+python app/src/app_crm.py
+docker rm -f app-crm && docker rmi -f app-crm-image
 
 ## Docker Compose – Application
+docker compose --env-file .env -f ./app/docker-compose.yml up -d    --force-recreate
+
 ## Docker Compose – Database (PostgreSQL + pgAdmin)
 https://github.com/docker-library/docs/blob/master/postgres/README.md#environment-variables
 
 docker pull postgres
 docker pull dpage/pgadmin4
-docker compose -f ./database/docker-compose.yml up -d
+docker compose --env-file .env -f ./database/docker-compose.yml up -d  --force-recreate
+http://localhost:8080
+
 localy:
 docker exec -it postgresql psql -U postgres
 
@@ -65,6 +71,7 @@ docker exec -it postgresql psql -U postgres
 docker rm -f postgresql && docker volume rm shared-volume
 
 docker run --name postgresql -d -p 5433:5432  \
+               --network=project-net \
                -e POSTGRES_PASSWORD=postgresdb \
                -v shared-volume:/var/lib/postgresql postgres
 
@@ -78,6 +85,11 @@ docker exec postgresql env | grep POSTGRES
 docker exec postgresql cat /var/lib/postgresql/18/docker/pg_hba.conf  | tail -10
 docker exec postgresql bash -c "echo 'host all all 0.0.0.0/0 md5' >> /var/lib/postgresql/18/docker/pg_hba.conf"
 docker restart postgresql
+
+
+
+
+
 
 ## Inventory file
 Playbook – Installations
