@@ -57,10 +57,10 @@ class pgdb:
                 """, (next_value, username, passw, email) )
             self.conn.commit()
 
-            return json.dumps({"ok": "Row successfully inserted to database"})
+            return {"ok": "Row successfully inserted to database"}
         except (Exception, Error) as error:
             print(f"Error: {error}")
-            return json.dumps({"error": str(error)}),500
+            return {"error": str(error)},500
 
         finally:
             self.pg_disconnect()
@@ -75,11 +75,11 @@ class pgdb:
                 cur.execute(query)
                 columns = [desc[0] for desc in cur.description]
                 data = [dict(zip(columns, row)) for row in cur.fetchall()]
-                return json.dumps({"ok": data}, ensure_ascii=False, default=str)
+                return {"ok": data}
             
         except (Exception, Error) as error:
             print(f"Error: {error}")
-            return json.dumps({"error": str(error)}),500
+            return {"error": str(error)},500
             
         finally:
             self.pg_disconnect()
