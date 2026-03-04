@@ -66,7 +66,8 @@ def set_users_route():
             return jsonify({"error": str(e)}), 500
    
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app_port = int(os.environ.get("APP_PORT"))
+    app.run(debug=True, host='0.0.0.0', port=app_port)
 
 
 # For URL query parameters, use request.args.
