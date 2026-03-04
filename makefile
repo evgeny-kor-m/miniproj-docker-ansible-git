@@ -1,4 +1,3 @@
-
 # Colors for output
 GREEN = \033[0;32m
 RED = \033[0;31m
@@ -25,14 +24,22 @@ clean: ## Remove test artifacts and cache
 	@if [ -n "$$(docker ps -a -q)" ]; then \
 		docker rm -f $$(docker ps -a -q); \
 	fi
-	@if [ -n "$$(docker images -q)" ]; then \
-		docker rmi -f $$(docker images -q); \
+	@if [ -n "$$(@docker images -q)" ]; then \
+		docker rmi -f $$(@docker images -q); \
+	fi
+	# docker images | grep -v ansible-slave-image | awk 'NR>1 {print $3}'
+	@if [ -n "$$(docker volume ls -q)" ]; then \
+		docker volume rm $$(docker volume ls -q);\
 	fi
 	docker system prune -a --volumes
 
 start-ansible: ## Run tests in Docker
 	@echo "$(BLUE) Running master/slave containers...$(NC)"
 	@docker compose -f $(ANSIBLE_COMPOSE) --env-file $(ENV_FILE) up -d
+
+stop-ansible: ## Run tests in Docker
+	@echo "$(BLUE) Sopping master/slave containers...$(NC)"
+	@docker compose -f $(ANSIBLE_COMPOSE) --env-file $(ENV_FILE) down
 
 view: ## View resources
 	@echo "$(BLUE) View images...$(NC)"
@@ -43,4 +50,18 @@ view: ## View resources
 	docker network ls
 	@echo "$(BLUE) View volume...$(NC)"
 	docker volume ls
+
+full-ansible: ## Checking communication master/slave containers
+	@echo "$(BLUE) Checking communication master/slave containers...$(NC)"
+	@make prerequisite
+	@make start-ansible
+	@make trust
+	@make check-access-from-master-to-slave
+
+trust: ## Ssh-keyscan for slaves 
+	docker exec -it ansible-master-01 sh -c "ssh-keyscan ansible-slave-01 >> /home/ansible/.ssh/known_hosts"
+
+check-ansible: ## Test access from master to slave
+	docker exec -it ansible-master-01 su - ansible sh -c "ansible -i /app/ansible/inventory.yml slaves -m ping"
+	docker exec -it ansible-master-01 su - ansible bash -c  "ssh -i /home/ansible/.ssh/id_rsa ansible@ansible-slave-01 exit && echo 'SSH success'"
 

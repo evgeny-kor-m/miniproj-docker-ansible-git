@@ -1,0 +1,25 @@
+all:
+  children:
+    slaves:
+      hosts:
+        slave-node-01:
+          ansible_host: application-server
+          ansible_user: ansible
+          ansible_ssh_pass: ansible
+          ansible_python_interpreter: /usr/bin/python3
+        slave-node-02:
+          ansible_host: database-server
+          ansible_user: ansible
+          ansible_ssh_pass: ansible
+          ansible_python_interpreter: /usr/bin/python3
+    master:
+      hosts:
+        master-node:
+          ansible_host: application-server
+          ansible_user: ansible
+          ansible_ssh_pass: ansible
+          ansible_python_interpreter: /usr/bin/python3
+    cluster:
+      children:
+        master:
+        slaves:

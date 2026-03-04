@@ -2,11 +2,11 @@ FROM ubuntu:24.04
 
 WORKDIR /app
 
-COPY requirements.txt .
+#COPY requirements.txt .
 
 RUN apt-get update && apt-get install -y \
     python3 python3-pip python3-venv\
-    openssh-server \
+    openssh-client \
     curl \
     vim \
     sshpass \
@@ -19,8 +19,18 @@ RUN apt-get update && apt-get install -y \
 RUN python3 -m venv /opt/venv  
 ENV PATH="/opt/venv/bin:$PATH"
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN ssh-keygen -A && \
+    useradd -m -s /bin/bash ansible && \ 
+    echo "ansible:ansible" | chpasswd &&\
+    echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    mkdir -p /home/ansible/.ssh && \
+    chown -R ansible:ansible /home/ansible/.ssh && \
+    chmod 700 /home/ansible/.ssh 
 
 COPY ./ansible ./ansible
+COPY ansible-slave/entrypoint.sh .
 
-CMD ["/usr/sbin/sshd", "-D"]
+RUN chmod +x entrypoint.sh
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+CMD ["tail", "-f", "/dev/null"]
