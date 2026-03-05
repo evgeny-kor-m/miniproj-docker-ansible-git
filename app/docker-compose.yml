@@ -1,10 +1,11 @@
 services:
   application-crm:
-    build:
-      context: ..
-      dockerfile: ./app/Dockerfile # Way to Dockerfile inside the context
     container_name: app-crm
-    image: app-crm-image # We obviously indicate the name of the image
+    # build:
+    #   context: ..
+    #   dockerfile: ./app/Dockerfile # Way to Dockerfile inside the context
+    # image: app-crm-image # We obviously indicate the name of the image
+    image: evgenykorchev/app-crm-image
     ports:
       - "5000:5000"
     environment:

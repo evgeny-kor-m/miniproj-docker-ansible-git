@@ -18,9 +18,10 @@ make prerequisite - create net, volume
 
 ## Create ssh_key folder and generate key
 sudo mkdir ~/.ssh_key
-sudo chown -R appuser:appuser ~/.ssh_key
 sudo ssh-keygen -t rsa -b 4096 -f ~/.ssh_key/id_rsa -N ""
 sudo mv ~/.ssh_key/id_rsa.pub ~/.ssh_key/authorized_keys
+chmod 600 known_hosts
+sudo chown -R appuser:appuser ~/.ssh_key
 
 ## Created Dockerfile – Ansible Master , ENTRYPOINT save id_rsa.pub in shared folder
 docker run -d --name ansible-master-01 --network project-net -p 2222:22 -v ./.ssh_key/id_rsa:/home/ansible/.ssh/id_rsa  ansible-master-image
@@ -52,21 +53,19 @@ docker push evgenykorchev/ansible-master-image:v01
 ## Dockerfile – Application
 python app/src/app_crm.py
 docker rm -f app-crm && docker rmi -f app-crm-image
+http://127.0.0.1:5000/healthcheck
 
 ## Docker Compose – Application
 docker compose --env-file .env -f ./app/docker-compose.yml up -d    --force-recreate
 
 ## Docker Compose – Database (PostgreSQL + pgAdmin)
+PostgreSQL
 https://github.com/docker-library/docs/blob/master/postgres/README.md#environment-variables
 
 docker pull postgres
 docker pull dpage/pgadmin4
 docker compose --env-file .env -f ./database/docker-compose.yml up -d  --force-recreate
-http://localhost:8080
-
-localy:
 docker exec -it postgresql psql -U postgres
-
 
 docker rm -f postgresql && docker volume rm shared-volume
 
@@ -74,7 +73,6 @@ docker run --name postgresql -d -p 5433:5432  \
                --network=project-net \
                -e POSTGRES_PASSWORD=postgresdb \
                -v shared-volume:/var/lib/postgresql postgres
-
 
 docker exec -it postgresql psql -U postgres -c "CREATE DATABASE mydb;"
 docker exec -it postgresql psql -U postgres -c "CREATE USER myuser WITH PASSWORD 'mypass123';"
@@ -86,6 +84,15 @@ docker exec postgresql cat /var/lib/postgresql/18/docker/pg_hba.conf  | tail -10
 docker exec postgresql bash -c "echo 'host all all 0.0.0.0/0 md5' >> /var/lib/postgresql/18/docker/pg_hba.conf"
 docker restart postgresql
 
+pgAdmin
+http://localhost:8080
+polzovatel@gmail.com/pass
+
+
+
+
+
+
 
 
 
@@ -95,6 +102,11 @@ docker restart postgresql
 Playbook – Installations
 Playbook – Docker Compose deployment
 README.md
+
+
+## Common docker compose
+docker compose --env-file .env up -d  --force-recreate
+
 
 
 docker build -t ansible-master-image -f ansible-master/Dockerfile .

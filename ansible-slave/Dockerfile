@@ -11,16 +11,16 @@ RUN apt-get update && apt-get install -y openssh-server \
     iputils-ping \
     && rm -rf /var/lib/apt/lists/*
 
-RUN ssh-keygen -A && \
-    useradd -m -s /bin/bash ansible && \ 
-    echo PubkeyAuthentication yes >> /etc/ssh/sshd_config && \
-    echo PasswordAuthentication yes >> /etc/ssh/sshd_config && \
-    echo "ansible:ansible" | chpasswd &&\
-    echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
-    mkdir -p /home/ansible/.ssh && \
-    mkdir -p /run/sshd && \ 
-    chown -R ansible:ansible /home/ansible/.ssh && \
-    chmod 700 /home/ansible/.ssh 
+ RUN ssh-keygen -A && \
+     useradd -m -s /bin/bash ansible && \ 
+     echo PubkeyAuthentication yes >> /etc/ssh/sshd_config && \
+     echo PasswordAuthentication yes >> /etc/ssh/sshd_config && \
+     echo "ansible:ansible" | chpasswd &&\
+     echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+     mkdir -p /home/ansible/.ssh && \
+     mkdir -p /run/sshd && \ 
+     chown -R ansible:ansible /home/ansible/.ssh && \
+     chmod 700 /home/ansible/.ssh 
     
 # to remain clean environment use venv for python packages
 RUN python3 -m venv /opt/venv

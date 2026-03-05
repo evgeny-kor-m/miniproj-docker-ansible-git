@@ -16,6 +16,7 @@ help: ## Show available commands and descriptions
 prerequisite: ## Creating prerequisites
 	docker network create project-net
 	docker volume create shared-volume
+	docker volume create pgadmin-data
 
 clean: ## Remove test artifacts and cache
 	@echo "$(YELLOW) Cleaning project folders...$(NC)"
@@ -55,8 +56,11 @@ full-ansible: ## Checking communication master/slave containers
 	@echo "$(BLUE) Checking communication master/slave containers...$(NC)"
 	@make prerequisite
 	@make start-ansible
-	@make trust
-	@make check-access-from-master-to-slave
+# 	@make trust
+	@make check-ansible
+	docker compose --env-file .env up -d
+	docker exec -it ansible-master-01 su - ansible sh -c "ansible -i /app/ansible/final-inventory.yml slaves -m ping"
+
 
 trust: ## Ssh-keyscan for slaves 
 	docker exec -it ansible-master-01 sh -c "ssh-keyscan ansible-slave-01 >> /home/ansible/.ssh/known_hosts"

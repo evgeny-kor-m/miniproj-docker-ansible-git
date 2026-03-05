@@ -1,21 +1,28 @@
 services:
   application-service:
-    image: evgenykorchev/ansible-slave-image:v01
+    image: evgenykorchev/ansible-slave-image:v02
     container_name: application-server
     ports:
       - "2221:22"
+    volumes:
+      - ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys
 
   database-service:
-    image: evgenykorchev/ansible-slave-image:v01
+    image: evgenykorchev/ansible-slave-image:v02
     container_name: database-server
     ports:
       - "2222:22"
+    volumes:
+      - ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys
 
   master-service:
-    image: evgenykorchev/ansible-master-image:v01
+    image: evgenykorchev/ansible-master-image:v02
     container_name: master-server
     ports:
       - "2023:22"
+    volumes:
+      - ~/.ssh_key/id_rsa:/home/ansible/.ssh/id_rsa
+      - ~/.ssh_key/known_hosts:/home/ansible/.ssh/known_hosts
   
 networks:
   default:

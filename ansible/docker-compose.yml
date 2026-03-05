@@ -8,10 +8,7 @@ services:
     ports:
       - "${SLV_EXT_PORT}:22"
     volumes:
-      - type: bind
-        source: ~/.ssh_key/authorized_keys
-        target: /home/ansible/.ssh/authorized_keys
-        read_only: true
+      - ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys
 
   ansible-master-01:
     build:
@@ -23,6 +20,7 @@ services:
       - "${MST_EXT_PORT}:22"
     volumes:
       - ~/.ssh_key/id_rsa:/home/ansible/.ssh/id_rsa
+      - ~/.ssh_key/known_hosts:/home/ansible/.ssh/known_hosts
     
 networks:
   default:
