@@ -5,6 +5,7 @@ WORKDIR /app
 #COPY requirements.txt .
 
 RUN apt-get update && apt-get install -y \
+    sudo \
     python3 python3-pip python3-venv\
     openssh-client \
     curl \
@@ -19,13 +20,12 @@ RUN apt-get update && apt-get install -y \
 RUN python3 -m venv /opt/venv  
 ENV PATH="/opt/venv/bin:$PATH"
 
-RUN ssh-keygen -A && \
-    useradd -m -s /bin/bash ansible && \ 
+# RUN ssh-keygen -A && \
+RUN useradd -m -s /bin/bash ansible && \
+    usermod -aG sudo ansible && \
     echo "ansible:ansible" | chpasswd &&\
     echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
-    mkdir -p /home/ansible/.ssh && \
-    chown -R ansible:ansible /home/ansible/.ssh && \
-    chmod 700 /home/ansible/.ssh 
+    mkdir -p /home/ansible/.ssh
 
 COPY ./ansible ./ansible
 COPY ansible-slave/entrypoint.sh .

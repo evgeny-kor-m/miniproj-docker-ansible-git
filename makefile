@@ -54,12 +54,17 @@ view: ## View resources
 
 full-ansible: ## Checking communication master/slave containers
 	@echo "$(BLUE) Checking communication master/slave containers...$(NC)"
+	make clean
 	@make prerequisite
 	@make start-ansible
 # 	@make trust
+	docker tag  ansible-slave-image  evgenykorchev/ansible-slave-image:v02
+	docker tag ansible-master-image evgenykorchev/ansible-master-image:v02
 	@make check-ansible
 	docker compose --env-file .env up -d
-	docker exec -it ansible-master-01 su - ansible sh -c "ansible -i /app/ansible/final-inventory.yml slaves -m ping"
+	docker exec -it master-server su - ansible sh -c "ansible -i /app/ansible/final-inventory.yml slaves -m ping"
+	docker exec -it master-server su - ansible sh -c "ssh -i /home/ansible/.ssh/id_rsa ansible@database-server exit && echo 'SSH success'"
+	docker exec -it master-server su - ansible sh -c "ssh -i /home/ansible/.ssh/id_rsa ansible@application-server exit && echo 'SSH success'"
 
 
 trust: ## Ssh-keyscan for slaves 

@@ -2,18 +2,32 @@ services:
   application-service:
     image: evgenykorchev/ansible-slave-image:v02
     container_name: application-server
+    privileged: true           # In order for the nested Docker daemon to start, the main container must be started with the --privileged flag.
+    environment:
+      DOCKER_TLS_CERTDIR: ""   # Disable TLS for simplicity
     ports:
       - "2221:22"
     volumes:
+       # (Master -> Slave) 
       - ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys
+      - ~/.ssh_key/slave_known_hosts:/home/ansible/.ssh/known_hosts
+      # (Slave -> GitHub) (ED25519)
+      - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
 
   database-service:
     image: evgenykorchev/ansible-slave-image:v02
     container_name: database-server
+    privileged: true           # In order for the nested Docker daemon to start, the main container must be started with the --privileged flag.
+    environment:
+      DOCKER_TLS_CERTDIR: ""   # Disable TLS for simplicity
     ports:
       - "2222:22"
     volumes:
+       # (Master -> Slave) 
       - ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys
+      - ~/.ssh_key/slave_known_hosts:/home/ansible/.ssh/known_hosts
+      # (Slave -> GitHub) (ED25519)
+      - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
 
   master-service:
     image: evgenykorchev/ansible-master-image:v02
@@ -21,8 +35,11 @@ services:
     ports:
       - "2023:22"
     volumes:
+      # (Master -> Slave) (RSA)
       - ~/.ssh_key/id_rsa:/home/ansible/.ssh/id_rsa
-      - ~/.ssh_key/known_hosts:/home/ansible/.ssh/known_hosts
+      - ~/.ssh_key/master_known_hosts:/home/ansible/.ssh/known_hosts
+      # temporary to edit online
+      - ./ansible:/app/ansible
   
 networks:
   default:

@@ -1,0 +1,125 @@
+- name: Install infrastructure
+  hosts: slaves
+  become: yes  # <--- Enables the use of [sudo] for all tasks in this playbook.
+
+  tasks:
+    - name: Dependency installation
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - git
+        state: present
+        update_cache: yes
+
+    - name: Добавление GPG-ключа Docker
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Добавить репозиторий Docker в источники apt
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Установить Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    - name: Запустить Docker daemon (DinD)
+      shell: |
+        if ! pgrep -x dockerd > /dev/null; then
+          nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 &
+          sleep 5
+        fi
+      args:
+        executable: /bin/bash
+
+    - name: Подождать готовности Docker socket
+      wait_for:
+        path: /var/run/docker.sock
+        state: present
+        timeout: 60
+
+    - name: Исправление прав на сокет (актуально для ручного запуска dockerd)
+      file:
+        path: /var/run/docker.sock
+        owner: root
+        group: docker
+        mode: '0660'
+
+    - name: Добавить текущего пользователя в группу docker
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+      become: yes
+
+    - name: Переподключиться для обновления прав группы
+      meta: reset_connection
+
+    - name: Проверить Docker
+      command: which docker
+      register: docker_path      
+      become_user: ansible
+
+    - name: Проверить Docker
+      command: docker --version
+      register: docker_version      
+      become_user: ansible
+
+    - name: Show Installation Status in Ansible consol
+      debug:
+        msg: 
+          - "Docker path: {{ docker_path.stdout }}"
+          - "Version info: {{ docker_version.stdout }}"
+    - name: Add GitHub to known_hosts
+      known_hosts:
+          name: github.com
+          key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
+          state: present 
+
+- name: Клонировать private репозиторий
+  hosts: slaves
+  become: yes
+  become_user: ansible
+  
+  vars:
+    github_repo: "git@github.com:evgeny-kor-m/mini-project.git"
+    clone_dest: "/home/ansible/mini-project"
+    github_key_file: "/home/ansible/.ssh/id_ed25519"
+    git_branch: "worker"
+    ansible_user_name: "ansible"
+  
+  tasks:
+    - name: Убедиться, что целевая директория существует и принадлежит пользователю
+      file:
+        path: "{{ clone_dest }}"
+        state: directory
+        owner: "{{ ansible_user_name }}"
+        group: "{{ ansible_user_name }}"
+        mode: '0755'
+
+    - name: Клонировать репозиторий
+      become_user: "{{ ansible_user_name }}"
+      git:
+        repo: "{{ github_repo }}"
+        dest: "{{ clone_dest }}"
+        # key_file указывает какой ключ использовать для этого конкретного действия
+        key_file: "{{ github_key_file }}"
+        # accept_hostkey: yes автоматически добавит github.com в known_hosts на Slave
+        accept_hostkey: yes
+        version: "{{ git_branch }}"  # автоматически переключит репозиторий на указанную branch.
+        force: yes   #  "Если на сервере что-то мешает обновлению — сотри это и скачай заново".
+      environment:
+        # Дополнительная страховка для SSH
+        GIT_SSH_COMMAND: "ssh -i {{ github_key_file }} -o StrictHostKeyChecking=no"	
