@@ -93,13 +93,6 @@
   become: yes
   become_user: ansible
   
-  vars:
-    github_repo: "git@github.com:evgeny-kor-m/mini-project.git"
-    clone_dest: "/home/ansible/mini-project"
-    github_key_file: "/home/ansible/.ssh/id_ed25519"
-    git_branch: "worker"
-    ansible_user_name: "ansible"
-  
   tasks:
     - name: Убедиться, что целевая директория существует и принадлежит пользователю
       file:

@@ -1,33 +1,27 @@
 all:
   children:
-    slaves:
+    db_servers:
+      hosts:
+        db-slave-node:
+          ansible_host: database-server
+          ansible_user: ansible
+          ansible_ssh_pass: ansible
+          ansible_python_interpreter: /usr/bin/python3
+    app_servers:
       hosts:
         app-slave-node:
           ansible_host: application-server
           ansible_user: ansible
           ansible_ssh_pass: ansible
           ansible_python_interpreter: /usr/bin/python3
-        db-slave-node:
-          ansible_host: database-server
-          ansible_user: ansible
-          ansible_ssh_pass: ansible
-          ansible_python_interpreter: /usr/bin/python3
+    slaves:
+      children:
+        db_servers:
+        app_servers:
     master:
       hosts:
         master-node:
           ansible_host: application-server
-          ansible_user: ansible
-          ansible_ssh_pass: ansible
-          ansible_python_interpreter: /usr/bin/python3
-    ansible:
-      hosts:
-        slave-node:
-          ansible_host: ansible-slave-01
-          ansible_user: ansible
-          ansible_ssh_pass: ansible
-          ansible_python_interpreter: /usr/bin/python3
-        master-node:
-          ansible_host: ansible-master-01
           ansible_user: ansible
           ansible_ssh_pass: ansible
           ansible_python_interpreter: /usr/bin/python3

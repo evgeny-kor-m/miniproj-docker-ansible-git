@@ -1,3 +1,12 @@
+
+#-----git---------------
+github_repo: "git@github.com:evgeny-kor-m/mini-project.git"
+clone_dest: "/home/ansible/mini-project"
+github_key_file: "/home/ansible/.ssh/id_ed25519"
+git_branch: "worker"
+ansible_user_name: "ansible"
+
+#------common---------------
 project_name: "mini-project"
 base_dir: "/home/ansible/{{ project_name }}"
 
