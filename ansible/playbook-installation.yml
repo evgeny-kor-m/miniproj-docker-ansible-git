@@ -35,14 +35,27 @@
         state: present
         update_cache: yes
 
-    - name: Запустить Docker daemon (DinD)
+    - name: Установить fuse-overlayfs
+      apt:
+        name: fuse-overlayfs
+        state: present
+        update_cache: yes
+
+    - name: Проверить установку
+      command: which fuse-overlayfs
+      register: fuse_check
+      changed_when: false
+
+    - name: Вывести путь
+      debug:
+        msg: "{{ fuse_check.stdout }}"
+
+    - name: Перезапустить Docker daemon
       shell: |
-        if ! pgrep -x dockerd > /dev/null; then
-          nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 &
-          sleep 5
-        fi
-      args:
-        executable: /bin/bash
+        pkill dockerd || true
+        sleep 2
+        nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 &
+        sleep 5
 
     - name: Подождать готовности Docker socket
       wait_for:
@@ -55,7 +68,7 @@
         path: /var/run/docker.sock
         owner: root
         group: docker
-        mode: '0660'
+        mode: '0666'
 
     - name: Добавить текущего пользователя в группу docker
       user:
@@ -77,11 +90,19 @@
       register: docker_version      
       become_user: ansible
 
+    - name: Проверить Docker
+      shell: docker info | grep "Storage Driver"
+      register: storage
+      changed_when: false
+      become_user: ansible
+
     - name: Show Installation Status in Ansible consol
       debug:
         msg: 
           - "Docker path: {{ docker_path.stdout }}"
           - "Version info: {{ docker_version.stdout }}"
+          - "Storage Driver: {{ storage.stdout }}"
+
     - name: Add GitHub to known_hosts
       known_hosts:
           name: github.com

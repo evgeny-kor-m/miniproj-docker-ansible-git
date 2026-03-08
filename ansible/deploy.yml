@@ -1,15 +1,15 @@
-- name: Деплой использованием существующих docker-compose файлов
-  hosts: slaves
-  become: yes
+- name: Deploy using existing docker-compose files
+  hosts: slaves # Target all slave nodes from inventory
+  become: yes   # Execute tasks with sudo privileges
   
   tasks:
-    # 1. Настройка базы данных
-    - name: Подготовка окружения для базы данных
-      # Теперь проверяем вхождение в функциональную группу
+    # 1. Database Configuration Section
+    - name: Prepare environment for Database
+      # Run only if the host belongs to 'db_servers' group
       when: "'db_servers' in group_names"
       block:
-        - name: Создать .env файл для базы данных
-          copy:
+        - name: Create .env file for Database
+          copy: # Generate .env file with specific DB credentials
             dest: "{{ base_dir }}/.env"
             content: |
               POSTGRES_DB={{ DB_NAME }}
@@ -19,22 +19,23 @@
               PGADMIN_DEFAULT_PASSWORD={{ PGADMIN_DEFAULT_PASSWORD }}
             owner: ansible
             group: ansible
-            mode: '0600'
+            mode: '0600' # Secure permissions: read/write for owner only
 
-        - name: Запустить Docker Compose для базы
-          shell: "docker compose up -d"
+        - name: Start Docker Compose for Database
+          shell: "docker compose pull && docker compose --env-file .env -f ./database/docker-compose.yml up -d --force-recreate" # Start containers in detached mode
           args:
-            chdir: "{{ base_dir }}"
+            chdir: "{{ base_dir }}" # Execute command in the base directory
 
-    # 2. Настройка приложения
-    - name: Подготовка окружения для Flask приложения
+    # 2. Application Configuration Section
+    - name: Prepare environment for Flask Application
+      # Run only if the host belongs to 'app_servers' group
       when: "'app_servers' in group_names"
       block:
-        - name: Создать .env файл для приложения
-          copy:
+        - name: Create .env file for Application
+          copy: # Configure app to connect to the DB host dynamically
             dest: "{{ base_dir }}/.env"
             content: |
-              # DATABASE_URL: берем адрес напрямую из hostvars конкретного хоста
+              # Fetching DB host IP from hostvars for cross-node communication
               DATABASE_URL=postgresql://{{ DB_USER }}:{{ DB_PASSWORD }}@{{ hostvars['db-slave-node']['ansible_host'] }}:5433/{{ DB_NAME }}
               DB_HOST={{ hostvars['db-slave-node']['ansible_host'] }}
               DB_PORT=5433
@@ -44,15 +45,16 @@
             group: ansible
             mode: '0600'
 
-        - name: Запустить Docker Compose для приложения
-          shell: "docker compose up -d --build"
+        - name: Start Docker Compose for Application
+          shell: "docker compose --env-file .env -f ./app/docker-compose.yml up -d" 
           args:
-            chdir: "{{ base_dir }}/app"
+            chdir: "{{ base_dir }}"
 
-    - name: Проверка запущенных контейнеров
-      shell: "docker ps"
-      register: docker_status
+    # 3. Verification Section
+    - name: Check running containers
+      shell: "docker ps" # List all active containers
+      register: docker_status # Save output to variable
 
-    - name: Вывод статуса
-      debug:
+    - name: Display deployment status
+      debug: # Print the command output to the console
         var: docker_status.stdout_lines
