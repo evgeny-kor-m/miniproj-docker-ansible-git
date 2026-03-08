@@ -39,6 +39,9 @@
               DATABASE_URL=postgresql://{{ DB_USER }}:{{ DB_PASSWORD }}@{{ hostvars['db-slave-node']['ansible_host'] }}:5433/{{ DB_NAME }}
               DB_HOST={{ hostvars['db-slave-node']['ansible_host'] }}
               DB_PORT=5433
+              DB_NAME={{ DB_NAME }}
+              DB_USER={{ DB_USER }}
+              DB_PASSWORD={{ DB_PASSWORD }}
               FLASK_ENV=production
               SECRET_KEY=some_random_flask_key
             owner: ansible
