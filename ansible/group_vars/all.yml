@@ -1,0 +1,9 @@
+project_name: "mini-project"
+base_dir: "/home/ansible/{{ project_name }}"
+
+# -------DB--------------
+DB_NAME: "postgres"
+DB_USER: "postgres"
+DB_PASSWORD: "postgresdb"
+DB_HOST: "postgresql"
+DB_PORT: 5432

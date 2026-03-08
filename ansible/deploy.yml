@@ -1,0 +1,57 @@
+- name: Деплой использованием существующих docker-compose файлов
+  hosts: db_servers, app_servers
+  become: yes
+  
+  tasks:
+    # 1. Настройка базы данных
+    - name: Подготовка окружения для базы данных
+      when: "'db-slave-node' in group_names"
+      block:
+        - name: Создать .env файл для базы данных
+          copy:
+            dest: "{{ base_dir }}/db/.env"
+            content: |
+              POSTGRES_DB={{ DB_NAME }}
+              POSTGRES_USER={{ DB_USER }}
+              POSTGRES_PASSWORD={{ POSTGRES_PASSWORD }}
+              PGADMIN_DEFAULT_EMAIL={{PGADMIN_DEFAULT_EMAIL}}
+              PGADMIN_DEFAULT_PASSWORD={{PGADMIN_DEFAULT_PASSWORD}}
+            owner: ansible
+            group: ansible
+            mode: '0600'
+
+        - name: Запустить Docker Compose для базы
+          shell: "docker compose up -d"
+          args:
+            chdir: "{{ base_dir }}/db"
+
+    # 2. Настройка приложения
+    - name: Подготовка окружения для Flask приложения
+      when: "'app-slave-node' in group_names"
+      block:
+        - name: Создать .env файл для приложения
+          copy:
+            dest: "{{ base_dir }}/app/.env"
+            content: |
+              # Указываем приложению, куда подключаться
+              # DATABASE_URL=postgresql://{{ DB_USER }}:{{ DB_PASSWORD }}@{{ hostvars['db-slave-node']['ansible_host'] }}:5432/{{ DB_NAME }}
+              DATABASE_URL=postgresql://{{ DB_USER }}:{{ DB_PASSWORD }}@{{ hostvars[groups['db-slave-node'][0]]['ansible_host'] }}:5433/{{ DB_NAME }}
+              DB_HOST={{ hostvars['db-slave-node']['ansible_host'] }}
+              FLASK_ENV=production
+              SECRET_KEY=some_random_flask_key
+            owner: ansible
+            group: ansible
+            mode: '0600'
+
+        - name: Запустить Docker Compose для приложения
+          shell: "docker compose up -d --build"
+          args:
+            chdir: "{{ base_dir }}/app"
+
+    - name: Проверка запущенных контейнеров
+      shell: "docker ps"
+      register: docker_status
+
+    - name: Вывод статуса
+      debug:
+        var: docker_status.stdout_lines
