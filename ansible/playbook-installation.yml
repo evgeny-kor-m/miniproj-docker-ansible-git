@@ -50,10 +50,10 @@
       debug:
         msg: "{{ fuse_check.stdout }}"
 
-    - name: Перезапустить Docker daemon
+    - name: Перезапустить Docker daemon   ## notify handler
       shell: |
-        pkill dockerd || true
-        sleep 2
+        #pkill dockerd || true
+        #sleep 2
         nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 &
         sleep 5
 

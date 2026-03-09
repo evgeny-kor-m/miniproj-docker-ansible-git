@@ -17,10 +17,12 @@ services:
     volumes:
       - shared-volume:/var/shared
     restart: always
+    networks:
+      - project-net
 
 networks:
-  default:
-    name: project-net
+  project-net:
+    external: true
 
 volumes:
   shared-volume:

@@ -33,8 +33,7 @@ services:
 
 networks:
   project-net:
-    driver: bridge
-
+    external: true
 
 volumes:
   shared-volume:

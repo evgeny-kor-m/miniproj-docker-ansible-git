@@ -7,6 +7,7 @@ services:
       DOCKER_TLS_CERTDIR: ""   # Disable TLS for simplicity
     ports:
       - "2221:22"
+      - "5000:5000"
     volumes:
        # (Master -> Slave) 
       - ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys
@@ -43,4 +44,5 @@ services:
   
 networks:
   default:
+    external: true
     name: project-net
