@@ -1,6 +1,6 @@
 - name: Install infrastructure
   hosts: slaves
-  become: yes  # <--- Enables the use of [sudo] for all tasks in this playbook.
+  become: yes
 
   tasks:
     - name: Dependency installation
@@ -12,6 +12,7 @@
           - gnupg
           - lsb-release
           - git
+          - fuse-overlayfs  # ← Добавлено здесь
         state: present
         update_cache: yes
 
@@ -20,7 +21,7 @@
         url: https://download.docker.com/linux/ubuntu/gpg
         state: present
 
-    - name: Добавить репозиторий Docker в источники apt
+    - name: Добавить репозиторий Docker
       apt_repository:
         repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
         state: present
@@ -35,39 +36,33 @@
         state: present
         update_cache: yes
 
-    - name: Установить fuse-overlayfs
-      apt:
-        name: fuse-overlayfs
-        state: present
-        update_cache: yes
+    - name: Создать конфиг Docker daemon
+      copy:
+        content: |
+          {
+            "storage-driver": "fuse-overlayfs",
+            "log-driver": "json-file",
+            "log-opts": {
+              "max-size": "10m",
+              "max-file": "3"
+            }
+          }
+        dest: /etc/docker/daemon.json
+        mode: '0644'
+      register: docker_config
 
-    - name: Проверить установку
-      command: which fuse-overlayfs
-      register: fuse_check
-      changed_when: false
-
-    - name: Вывести путь
-      debug:
-        msg: "{{ fuse_check.stdout }}"
+    - name: Перезапустить Docker (если конфиг изменился)
+      systemd:
+        name: docker
+        state: restarted
+        daemon_reload: yes
+      when: docker_config.changed
 
     - name: Убедиться, что Docker запущен
       service:
         name: docker
         state: started
         enabled: yes
-
-    # - name: Перезапустить Docker daemon   ## notify handler
-    #   shell: |
-    #     #pkill dockerd || true
-    #     #sleep 2
-    #     nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 &
-    #     sleep 5
-
-    # - name: Подождать готовности Docker socket
-    #   wait_for:
-    #     path: /var/run/docker.sock
-    #     state: present
-    #     timeout: 60
 
     - name: Ensure ansible user is in docker group
       user:
@@ -82,52 +77,28 @@
         owner: root
         group: docker
 
-    # - name: Переподключиться для обновления прав группы
-    #   meta: reset_connection
-    - name: Configure Docker to use fuse-overlayfs (DinD Fix)
-      copy:
-        dest: /etc/docker/daemon.json
-        content: |
-          {
-            "storage-driver": "fuse-overlayfs"
-          }
-      notify: restart docker
-
-    - name: Force restart docker daemon manually (No systemd fix)
-      shell: |
-        pkill -9 dockerd || true
-        pkill -9 containerd || true
-        dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 &
-      async: 10
-      poll: 0
-    - name: Проверить Docker path
-      command: which docker
-      register: docker_path      
-      become_user: ansible
-
     - name: Проверить Docker version
       command: docker --version
       register: docker_version      
       become_user: ansible
 
-    - name: Проверить Docker
+    - name: Проверить Storage Driver
       shell: docker info | grep "Storage Driver"
       register: storage
       changed_when: false
       become_user: ansible
 
-    - name: Show Installation Status in Ansible consol
+    - name: Show Installation Status
       debug:
         msg: 
-          - "Docker path: {{ docker_path.stdout }}"
-          - "Version info: {{ docker_version.stdout }}"
-          - "Storage Driver: {{ storage.stdout }}"
+          - "Docker version: {{ docker_version.stdout }}"
+          - "{{ storage.stdout }}"
 
     - name: Add GitHub to known_hosts
       known_hosts:
-          name: github.com
-          key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
-          state: present 
+        name: github.com
+        key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
+        state: present
 
 - name: Clone private repository
   hosts: slaves
@@ -135,7 +106,7 @@
   become_user: ansible
   
   tasks:
-    - name: Убедиться, что целевая директория существует и принадлежит пользователю
+    - name: Убедиться, что целевая директория существует
       file:
         path: "{{ clone_dest }}"
         state: directory
@@ -144,16 +115,12 @@
         mode: '0755'
 
     - name: Клонировать репозиторий
-      become_user: "{{ ansible_user_name }}"
       git:
         repo: "{{ github_repo }}"
         dest: "{{ clone_dest }}"
-        # key_file указывает какой ключ использовать для этого конкретного действия
         key_file: "{{ github_key_file }}"
-        # accept_hostkey: yes автоматически добавит github.com в known_hosts на Slave
         accept_hostkey: yes
-        version: "{{ git_branch }}"  # автоматически переключит репозиторий на указанную branch.
-        force: yes   #  "Если на сервере что-то мешает обновлению — сотри это и скачай заново".
+        version: "{{ git_branch }}"
+        force: yes
       environment:
-        # Дополнительная страховка для SSH
-        GIT_SSH_COMMAND: "ssh -i {{ github_key_file }} -o StrictHostKeyChecking=no"	
+        GIT_SSH_COMMAND: "ssh -i {{ github_key_file }} -o StrictHostKeyChecking=no"
