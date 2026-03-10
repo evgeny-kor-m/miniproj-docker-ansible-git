@@ -9,20 +9,15 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=database-server
       - DB_PORT=${DB_PORT}
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
     volumes:
-      - shared-volume:/var/shared
+      - app-data:/var/lib/volume
     restart: always
-    networks:
-      - project-net
-
-networks:
-  project-net:
-    external: true
 
 volumes:
-  shared-volume:
+  app-data:
+    name: app-data

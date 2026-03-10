@@ -4,18 +4,25 @@ services:
     image: postgres
     container_name: postgresql
     ports:
-      - "5433:5432"
+      - "5432:5432"
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     networks:
-      - project-net
+      - db-network
     restart: always
     # set shared memory limit when using docker compose
     shm_size: 128mb
     # or set shared memory limit when deploy via swarm stack
     volumes:
-      - shared-volume:/var/lib/postgresql
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
 
   pgadmin4:
     container_name: pgadmin4-client
@@ -25,16 +32,20 @@ services:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
     restart: always
     ports:
-      - 8080:80 
+      - "80:80"
     networks:
-          - project-net
+      - db-network
     volumes:
       - pgadmin-data:/var/lib/pgadmin
 
 networks:
-  project-net:
-    external: true
+  db-network:
+    driver: bridge
 
 volumes:
-  shared-volume:
-  pgadmin-data:
+  postgres-data:
+    name: postgres-data
+  gadmin-data:
+    name: pgadmin-data
+
+  

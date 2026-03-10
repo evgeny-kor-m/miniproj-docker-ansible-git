@@ -1,0 +1,89 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36" version="29.6.1">
+  <diagram name="Страница-1" id="ADkgqhl720EgcY2nWLyz">
+    <mxGraphModel dx="1727" dy="944" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-14" edge="1" parent="1" source="CDXmvYWaIVrmRs5S9VL7-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="Tt1u9ovMGmBIFjvMXk39-1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="170" />
+              <mxPoint x="680" y="170" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-16" connectable="0" parent="CDXmvYWaIVrmRs5S9VL7-14" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Text" vertex="1">
+          <mxGeometry relative="1" x="-0.0039" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-17" connectable="0" parent="CDXmvYWaIVrmRs5S9VL7-14" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="project-net" vertex="1">
+          <mxGeometry relative="1" x="0.0106" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;" value="D-1&amp;nbsp;DB Server&lt;div&gt;ansible-slave-image&lt;/div&gt;&lt;div&gt;database-server&lt;br&gt;&lt;div&gt;port&amp;nbsp;2222:22&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;db&lt;span class=&quot;token token&quot; style=&quot;color: rgb(43, 48, 59);&quot;&gt;-&lt;/span&gt;network&lt;/div&gt;" vertex="1">
+          <mxGeometry height="323" width="160" x="280" y="207" as="geometry" />
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;align=left;" value="Docker-compose" vertex="1">
+          <mxGeometry height="100" width="300" x="280" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Tt1u9ovMGmBIFjvMXk39-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;" value="D-3&amp;nbsp;Master&lt;div&gt;ansible-master-image&lt;br&gt;&lt;div&gt;port&amp;nbsp;2223:22&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="210" width="160" x="600" y="207" as="geometry" />
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-15" edge="1" parent="1" source="Tt1u9ovMGmBIFjvMXk39-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="Tt1u9ovMGmBIFjvMXk39-2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+            <mxPoint x="530" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Tt1u9ovMGmBIFjvMXk39-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;" value="D-2&amp;nbsp;APP Server&lt;div&gt;ansible-slave-image&lt;/div&gt;&lt;div&gt;application-server&lt;br&gt;&lt;div&gt;port&amp;nbsp;2221:22&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="273" width="160" x="440" y="207" as="geometry" />
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;" value="D-1-1&amp;nbsp;postgres&lt;div&gt;port 5433:5432&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="300" y="307" as="geometry" />
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-10" edge="1" parent="1" source="CDXmvYWaIVrmRs5S9VL7-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="CDXmvYWaIVrmRs5S9VL7-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-11" connectable="0" parent="CDXmvYWaIVrmRs5S9VL7-10" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;code class=&quot;bg-text-200/5 border border-0.5 border-border-300 text-danger-000 whitespace-pre-wrap rounded-[0.4rem] px-1 py-px text-[0.9rem]&quot;&gt;postgres:5432&lt;/code&gt; /&lt;div&gt;&lt;code class=&quot;bg-text-200/5 border border-0.5 border-border-300 text-danger-000 whitespace-pre-wrap rounded-[0.4rem] px-1 py-px text-[0.9rem]&quot;&gt;localhost:5432&lt;/code&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.239" y="2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;" value="D-1-2&amp;nbsp;pgadmin4&lt;div&gt;port 80:8080&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="300" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;" value="D-2-1 flask-app&lt;div&gt;port&amp;nbsp;5000:5000&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="460" y="307" as="geometry" />
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-6" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;" value="&lt;span style=&quot;&quot;&gt;D-0-1&amp;nbsp;ansible-master&lt;/span&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="440" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;" value="D-0-1&amp;nbsp;ansible-slave" vertex="1">
+          <mxGeometry height="60" width="120" x="300" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="310" width="480" x="280" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-12" edge="1" parent="1" source="CDXmvYWaIVrmRs5S9VL7-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.585;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" target="CDXmvYWaIVrmRs5S9VL7-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="CDXmvYWaIVrmRs5S9VL7-13" connectable="0" parent="CDXmvYWaIVrmRs5S9VL7-12" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="database-server:5432" vertex="1">
+          <mxGeometry relative="1" x="0.0622" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Vmz_uEIBcPYR20jvzqhn-1" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="docker-compose-ansible.yml" vertex="1">
+          <mxGeometry height="30" width="180" x="70" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="Vmz_uEIBcPYR20jvzqhn-2" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="app/docker-compose.yml" vertex="1">
+          <mxGeometry height="30" width="150" x="90" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="Vmz_uEIBcPYR20jvzqhn-3" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="database/docker-compose.yml" vertex="1">
+          <mxGeometry height="30" width="180" x="40" y="300" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

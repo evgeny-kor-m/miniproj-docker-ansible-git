@@ -3,7 +3,7 @@
   become: yes   # Execute tasks with sudo privileges
   
   tasks:
-    # 1. Database Configuration Section
+      # 1. Database Configuration Section
     - name: Prepare environment for Database
       # Run only if the host belongs to 'db_servers' group
       when: "'db_servers' in group_names"
@@ -22,7 +22,7 @@
             mode: '0600' # Secure permissions: read/write for owner only
 
         - name: Start Docker Compose for Database
-          shell: "docker compose pull && docker compose --env-file .env -f ./database/docker-compose.yml up -d --force-recreate" # Start containers in detached mode
+          shell: "docker compose --env-file .env -f ./database/docker-compose.yml up -d" # Start containers in detached mode
           args:
             chdir: "{{ base_dir }}" # Execute command in the base directory
 

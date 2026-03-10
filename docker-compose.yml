@@ -9,7 +9,7 @@ services:
       - "2221:22"
       - "5000:5000"
     volumes:
-       # (Master -> Slave) 
+       # (Master -> Slave)
       - ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys
       - ~/.ssh_key/slave_known_hosts:/home/ansible/.ssh/known_hosts
       # (Slave -> GitHub) (ED25519)
@@ -23,6 +23,8 @@ services:
       DOCKER_TLS_CERTDIR: ""   # Disable TLS for simplicity
     ports:
       - "2222:22"
+      - "5433:5432"  # Postgres
+      - "8080:80"    # PgAdmin
     volumes:
        # (Master -> Slave) 
       - ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys

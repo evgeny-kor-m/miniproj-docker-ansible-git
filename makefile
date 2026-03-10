@@ -13,9 +13,9 @@ help: ## Show available commands and descriptions
 	@grep -hE '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) \
 	| awk 'BEGIN {FS=":.*## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
-prerequisite: ## Creating prerequisites
+infra-resources: ## Creating prerequisites
 	docker network create project-net
-	docker volume create shared-volume
+	docker volume create postgres-data
 	docker volume create pgadmin-data
 
 clean: ## Remove test artifacts and cache
@@ -55,7 +55,7 @@ view: ## View resources
 full-ansible: ## Checking communication master/slave containers
 	@echo "$(BLUE) Checking communication master/slave containers...$(NC)"
 	make clean
-	@make prerequisite
+	@make infra-resources
 	@make start-ansible
 # 	@make trust
 	docker tag  ansible-slave-image  evgenykorchev/ansible-slave-image:v02
