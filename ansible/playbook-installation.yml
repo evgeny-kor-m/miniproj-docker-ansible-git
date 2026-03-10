@@ -50,13 +50,19 @@
       debug:
         msg: "{{ fuse_check.stdout }}"
 
+    - name: Убедиться, что Docker запущен
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
     - name: Перезапустить Docker daemon   ## notify handler
       shell: |
         #pkill dockerd || true
         #sleep 2
         nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 &
         sleep 5
-        
+
     - name: Подождать готовности Docker socket
       wait_for:
         path: /var/run/docker.sock
