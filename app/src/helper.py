@@ -5,11 +5,15 @@ import sys
 import psycopg2
 from psycopg2 import Error
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stdout)]
-)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
+if not logger.handlers:
+    handler = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
 class pgdb:
     def __init__(self,_host,_dbname,_username,_password,_port):
@@ -23,6 +27,7 @@ class pgdb:
 
     def pg_connect(self):
         try:
+            logger.info(f"Connecting to {self.host}:{self.port}...")
             self.conn = psycopg2.connect(dbname=self.dbname, 
                                          user=self.username, 
                                          password=self.password, 
