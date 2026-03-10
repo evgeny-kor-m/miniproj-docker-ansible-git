@@ -1,8 +1,18 @@
 import os
+import logging
+import sys     
 from flask import Flask, request, jsonify
 from helper import *
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    stream=sys.stdout  # Явно указываем стандартный вывод
+)
+
 app = Flask(__name__)
+
+app.logger.handlers = logging.getLogger().handlers
 
 db_name=os.getenv("DB_NAME")
 db_user=os.getenv("DB_USER")
