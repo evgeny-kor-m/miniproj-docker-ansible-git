@@ -12,11 +12,11 @@
           copy: # Generate .env file with specific DB credentials
             dest: "{{ base_dir }}/.env"
             content: |
-              env_DB_NAME={{ var_DB_NAME }}
-              env_DB_USER={{ var_DB_USER }}
-              env_DB_PASSWORD={{ var_DB_PASSWORD }}
-              env_PGADMIN_DEFAULT_EMAIL={{ var_PGADMIN_DEFAULT_EMAIL }}
-              env_PGADMIN_DEFAULT_PASSWORD={{ var_PGADMIN_DEFAULT_PASSWORD }}
+              POSTGRES_DB={{ var_DB_NAME }}
+              POSTGRES_USER={{ var_DB_USER }}
+              POSTGRES_PASSWORD={{ var_DB_PASSWORD }}
+              PGADMIN_DEFAULT_EMAIL={{ var_PGADMIN_DEFAULT_EMAIL }}
+              PGADMIN_DEFAULT_PASSWORD={{ var_PGADMIN_DEFAULT_PASSWORD }}
             owner: ansible
             group: ansible
             mode: '0600' # Secure permissions: read/write for owner only
@@ -39,9 +39,9 @@
               DATABASE_URL=postgresql://{{ DB_USER }}:{{ DB_PASSWORD }}@{{ hostvars['db-slave-node']['ansible_host'] }}:5433/{{ DB_NAME }}
               DB_HOST={{ hostvars['db-slave-node']['ansible_host'] }}
               DB_PORT=5433
-              DB_NAME={{ DB_NAME }}
-              DB_USER={{ DB_USER }}
-              DB_PASSWORD={{ DB_PASSWORD }}
+              DB_NAME={{ var_DB_NAME }}
+              DB_USER={{ var_DB_USER }}
+              DB_PASSWORD={{ var_DB_PASSWORD }}
               FLASK_ENV=production
               SECRET_KEY=some_random_flask_key
             owner: ansible
