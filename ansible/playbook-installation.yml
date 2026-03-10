@@ -69,19 +69,18 @@
     #     state: present
     #     timeout: 60
 
-    # - name: Исправление прав на сокет (актуально для ручного запуска dockerd)
-    #   file:
-    #     path: /var/run/docker.sock
-    #     owner: root
-    #     group: docker
-    #     mode: '0666'
+    - name: Ensure ansible user is in docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
 
-    # - name: Добавить текущего пользователя в группу docker
-    #   user:
-    #     name: "{{ ansible_user }}"
-    #     groups: docker
-    #     append: yes
-    #   become: yes
+    - name: Fix docker.sock permissions
+      file:
+        path: /var/run/docker.sock
+        mode: '0666'
+        owner: root
+        group: docker
 
     # - name: Переподключиться для обновления прав группы
     #   meta: reset_connection
