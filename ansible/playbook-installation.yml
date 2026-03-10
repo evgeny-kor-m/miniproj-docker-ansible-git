@@ -56,35 +56,35 @@
         state: started
         enabled: yes
 
-    - name: Перезапустить Docker daemon   ## notify handler
-      shell: |
-        #pkill dockerd || true
-        #sleep 2
-        nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 &
-        sleep 5
+    # - name: Перезапустить Docker daemon   ## notify handler
+    #   shell: |
+    #     #pkill dockerd || true
+    #     #sleep 2
+    #     nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 &
+    #     sleep 5
 
-    - name: Подождать готовности Docker socket
-      wait_for:
-        path: /var/run/docker.sock
-        state: present
-        timeout: 60
+    # - name: Подождать готовности Docker socket
+    #   wait_for:
+    #     path: /var/run/docker.sock
+    #     state: present
+    #     timeout: 60
 
-    - name: Исправление прав на сокет (актуально для ручного запуска dockerd)
-      file:
-        path: /var/run/docker.sock
-        owner: root
-        group: docker
-        mode: '0666'
+    # - name: Исправление прав на сокет (актуально для ручного запуска dockerd)
+    #   file:
+    #     path: /var/run/docker.sock
+    #     owner: root
+    #     group: docker
+    #     mode: '0666'
 
-    - name: Добавить текущего пользователя в группу docker
-      user:
-        name: "{{ ansible_user }}"
-        groups: docker
-        append: yes
-      become: yes
+    # - name: Добавить текущего пользователя в группу docker
+    #   user:
+    #     name: "{{ ansible_user }}"
+    #     groups: docker
+    #     append: yes
+    #   become: yes
 
-    - name: Переподключиться для обновления прав группы
-      meta: reset_connection
+    # - name: Переподключиться для обновления прав группы
+    #   meta: reset_connection
 
     - name: Проверить Docker
       command: which docker
