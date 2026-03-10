@@ -14,11 +14,20 @@ app = Flask(__name__)
 
 app.logger.handlers = logging.getLogger().handlers
 
-db_name=os.getenv("DB_NAME")
-db_user=os.getenv("DB_USER")
-db_passw=os.getenv("DB_PASSWORD")
-db_host=os.getenv("DB_HOST")
-db_port=os.getenv("DB_PORT")
+db_name = os.getenv("DB_NAME", "postgres")
+db_user = os.getenv("DB_USER", "postgres")
+db_passw = os.getenv("DB_PASSWORD", "postgresdb")
+db_host = os.getenv("DB_HOST", "database-server")
+db_port = os.getenv("DB_PORT", "5432")
+
+logging.info("=" * 50)
+logging.info("Database Configuration:")
+logging.info(f"  DB_HOST: {db_host}")
+logging.info(f"  DB_PORT: {db_port}")
+logging.info(f"  DB_NAME: {db_name}")
+logging.info(f"  DB_USER: {db_user}")
+logging.info(f"  DB_PASSWORD: {'*' * len(db_passw)}")  # Маскировать пароль
+logging.info("=" * 50)
 
 dbPg = pgdb(db_host,db_name,db_user,db_passw,db_port)
 
@@ -29,7 +38,12 @@ def hello_world():
 @app.route('/healthcheck', methods=['GET'])
 def checkStatus():
     response = {
-        'healthCheck': 'Flask service is up and running!'
+        'healthCheck': 'Flask service is up and running!',
+        'dbConfig': {
+            'host': db_host,
+            'port': db_port,
+            'database': db_name
+        }
     }
     return jsonify(response), 200
 
@@ -51,6 +65,7 @@ def get_users_route():
             return jsonify(response), 200
         
         except Exception as e:
+            logging.error(f"Error in get_users_route: {e}", exc_info=True)
             return jsonify({"error in get_users_route": str(e)}), 500
 
 @app.route("/setusers", methods=['POST'])
@@ -73,10 +88,12 @@ def set_users_route():
             response_data = dbPg.insertRow(username, password, email)
             return jsonify(response_data), 200
         except Exception as e:
+            logging.error(f"Error in set_users_route: {e}", exc_info=True)
             return jsonify({"error in set_users_route": str(e)}), 500
    
 if __name__ == "__main__":
     app_port = os.getenv("APP_PORT")
+    logging.info(f"Starting Flask app on port {app_port}")
     app.run(debug=True, host='0.0.0.0', port=app_port)
 
 

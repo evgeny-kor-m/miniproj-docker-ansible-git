@@ -27,12 +27,15 @@ class pgdb:
 
     def pg_connect(self):
         try:
-            logger.info(f"Connecting to {self.host}:{self.port}...")
+            logger.info(f"Attempting connection to {self.host}:{self.port}/{self.dbname}")
+            logger.info(f"Connection params: user={self.username}, port={self.port}")
+
             self.conn = psycopg2.connect(dbname=self.dbname, 
                                          user=self.username, 
                                          password=self.password, 
                                          host=self.host, 
-                                         port=self.port)
+                                         port=self.port,
+                                         connect_timeout=10)
             print("Connected to PostgreSQL successfully!")
             logging.info("Connected to PostgreSQL successfully!")
 
@@ -43,10 +46,15 @@ class pgdb:
             print(f"PostgreSQL version: {db_version}")
             logging.info(f"PostgreSQL version: {db_version}")
 
+        except psycopg2.OperationalError as e:
+            error_msg = f"❌ Cannot connect to database at {self.host}:{self.port} - {str(e)}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+        
         except Exception as e:
-            logging.error(f"Failed to connect to DB. Error: {e}")
-            print(f"An error occurred: {e}")
-            raise e 
+            error_msg = f"❌ Database connection failed: {str(e)}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
 
     def pg_disconnect(self) -> None:
         # Close the cursor and connection
@@ -75,10 +83,11 @@ class pgdb:
             self.conn.commit()
 
             return {"ok": "Row successfully inserted to database"}
-        except (Exception, Error) as error:
-            print(f"Error: {error}")
-            logging.error(f"insertRow Error: {error}")
-            return {"error": str(error)},500
+        except Exception as error:
+            logger.error(f"❌ insertRow Error: {error}")
+            if self.conn:
+                self.conn.rollback()
+            raise Exception(f"Insert failed: {str(error)}")
 
         finally:
             self.pg_disconnect()
@@ -95,10 +104,9 @@ class pgdb:
                 data = [dict(zip(columns, row)) for row in cur.fetchall()]
                 return {"ok": data}
             
-        except (Exception, Error) as error:
-            print(f"Error: {error}")
-            logging.error(f"selectRows Error: {error}")
-            return {"error": str(error)},500
+        except Exception as error:
+            logger.error(f"❌ selectRows Error: {error}")
+            raise Exception(f"Select failed: {str(error)}")
             
         finally:
             self.pg_disconnect()
