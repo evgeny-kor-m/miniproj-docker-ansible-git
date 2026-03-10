@@ -84,7 +84,22 @@
 
     # - name: Переподключиться для обновления прав группы
     #   meta: reset_connection
+    - name: Configure Docker to use fuse-overlayfs (DinD Fix)
+      copy:
+        dest: /etc/docker/daemon.json
+        content: |
+          {
+            "storage-driver": "fuse-overlayfs"
+          }
+      notify: restart docker
 
+    - name: Force restart docker daemon manually (No systemd fix)
+      shell: |
+        pkill -9 dockerd || true
+        pkill -9 containerd || true
+        dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 &
+      async: 10
+      poll: 0
     - name: Проверить Docker path
       command: which docker
       register: docker_path      
