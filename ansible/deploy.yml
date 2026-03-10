@@ -36,7 +36,7 @@
             dest: "{{ base_dir }}/.env"
             content: |
               # Fetching DB host IP from hostvars for cross-node communication
-              DATABASE_URL=postgresql://{{ var_DB_USER }}:{{ var_DB_PASSWORD }}@{{ hostvars['db-slave-node']['ansible_host'] }}:5433/{{ var_DB_NAME }}
+              # DATABASE_URL=postgresql://{{ var_DB_USER }}:{{ var_DB_PASSWORD }}@{{ hostvars['db-slave-node']['ansible_host'] }}:5433/{{ var_DB_NAME }}
               DB_HOST={{ hostvars['db-slave-node']['ansible_host'] }}
               DB_PORT={{ var_DB_PORT }}
               DB_NAME={{ var_DB_NAME }}

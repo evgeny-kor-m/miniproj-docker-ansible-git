@@ -41,7 +41,7 @@ def get_users_route():
             return jsonify(response), 200
         
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error in get_users_route": str(e)}), 500
 
 @app.route("/setusers", methods=['POST'])
 def set_users_route():
@@ -63,7 +63,7 @@ def set_users_route():
             response_data = dbPg.insertRow(username, password, email)
             return jsonify(response_data), 200
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error in set_users_route": str(e)}), 500
    
 if __name__ == "__main__":
     app_port = os.getenv("APP_PORT")

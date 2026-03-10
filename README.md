@@ -144,6 +144,8 @@ docker run -d --privileged --name database-server -v /var/lib/docker:/var/lib/do
 
 ansible -i /app/ansible/final-inventory.yml slaves -m ping
 ansible-playbook -i /app/ansible/final-inventory.yml /app/ansible/playbook-installation.yml --syntax-check
+ansible-playbook -i /app/ansible/final-inventory.yml /app/ansible/playbook-installation.yml --tags "clone_repo"
+
 ansible-playbook -i /app/ansible/final-inventory.yml /app/ansible/deploy.yml
 
 ssh -i /home/ansible/.ssh/id_rsa ansible@database-server
