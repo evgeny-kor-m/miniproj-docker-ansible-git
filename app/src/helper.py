@@ -1,8 +1,15 @@
 
 import json
-
+import logging
+import sys
 import psycopg2
 from psycopg2 import Error
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
 
 class pgdb:
     def __init__(self,_host,_dbname,_username,_password,_port):
@@ -22,15 +29,19 @@ class pgdb:
                                          host=self.host, 
                                          port=self.port)
             print("Connected to PostgreSQL successfully!")
+            logging.info("Connected to PostgreSQL successfully!")
 
             self.cur = self.conn.cursor()
             self.cur.execute("SELECT version();")
             
             db_version = self.cur.fetchone()
             print(f"PostgreSQL version: {db_version}")
+            logging.info(f"PostgreSQL version: {db_version}")
 
         except Exception as e:
+            logging.error(f"Failed to connect to DB. Error: {e}")
             print(f"An error occurred: {e}")
+            raise e 
 
     def pg_disconnect(self) -> None:
         # Close the cursor and connection
@@ -39,6 +50,7 @@ class pgdb:
         if self.conn:
             self.conn.close()
         print("Disconnected from PostgreSQL !")
+        logging.info(f"Disconnected from PostgreSQL !")
 
     def insertRow(self,username,passw,email):
         sequence_name='get_postgres_table_seq'
@@ -60,6 +72,7 @@ class pgdb:
             return {"ok": "Row successfully inserted to database"}
         except (Exception, Error) as error:
             print(f"Error: {error}")
+            logging.error(f"insertRow Error: {error}")
             return {"error": str(error)},500
 
         finally:
@@ -79,6 +92,7 @@ class pgdb:
             
         except (Exception, Error) as error:
             print(f"Error: {error}")
+            logging.error(f"selectRows Error: {error}")
             return {"error": str(error)},500
             
         finally:
