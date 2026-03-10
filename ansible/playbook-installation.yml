@@ -56,8 +56,7 @@
         #sleep 2
         nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 &
         sleep 5
-      state: present
-
+        
     - name: Подождать готовности Docker socket
       wait_for:
         path: /var/run/docker.sock
