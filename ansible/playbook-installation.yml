@@ -1,3 +1,28 @@
+- name: Clone private repository
+  hosts: slaves
+  become: yes
+  become_user: ansible
+  
+  tasks:
+    - name: Убедиться, что целевая директория существует
+      file:
+        path: "{{ clone_dest }}"
+        state: directory
+        owner: "{{ ansible_user_name }}"
+        group: "{{ ansible_user_name }}"
+        mode: '0755'
+
+    - name: Клонировать репозиторий
+      git:
+        repo: "{{ github_repo }}"
+        dest: "{{ clone_dest }}"
+        key_file: "{{ github_key_file }}"
+        accept_hostkey: yes
+        version: "{{ git_branch }}"
+        force: yes
+      environment:
+        GIT_SSH_COMMAND: "ssh -i {{ github_key_file }} -o StrictHostKeyChecking=no"
+
 - name: Install infrastructure
   hosts: slaves
   become: yes
@@ -104,27 +129,3 @@
         key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
         state: present
 
-- name: Clone private repository
-  hosts: slaves
-  become: yes
-  become_user: ansible
-  
-  tasks:
-    - name: Убедиться, что целевая директория существует
-      file:
-        path: "{{ clone_dest }}"
-        state: directory
-        owner: "{{ ansible_user_name }}"
-        group: "{{ ansible_user_name }}"
-        mode: '0755'
-
-    - name: Клонировать репозиторий
-      git:
-        repo: "{{ github_repo }}"
-        dest: "{{ clone_dest }}"
-        key_file: "{{ github_key_file }}"
-        accept_hostkey: yes
-        version: "{{ git_branch }}"
-        force: yes
-      environment:
-        GIT_SSH_COMMAND: "ssh -i {{ github_key_file }} -o StrictHostKeyChecking=no"
