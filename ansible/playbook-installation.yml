@@ -20,7 +20,7 @@
         accept_hostkey: yes
         version: "{{ git_branch }}"
         force: yes
-      tags: clone_task
+      tags: clone_repo
       environment:
         GIT_SSH_COMMAND: "ssh -i {{ github_key_file }} -o StrictHostKeyChecking=no"
 
