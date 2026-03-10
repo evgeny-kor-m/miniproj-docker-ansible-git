@@ -86,12 +86,12 @@
     # - name: Переподключиться для обновления прав группы
     #   meta: reset_connection
 
-    - name: Проверить Docker
+    - name: Проверить Docker path
       command: which docker
       register: docker_path      
       become_user: ansible
 
-    - name: Проверить Docker
+    - name: Проверить Docker version
       command: docker --version
       register: docker_version      
       become_user: ansible
