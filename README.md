@@ -40,11 +40,20 @@ chmod 600 ~/.ssh_key/*
 chmod 600 known_hosts
 sudo chown -R appuser:appuser ~/.ssh_key
 
-## Created Dockerfile – Ansible Master , ENTRYPOINT save id_rsa.pub in shared folder
-docker run -d --name ansible-master-01 --network project-net -p 2222:22 -v ./.ssh_key/id_rsa:/home/ansible/.ssh/id_rsa  ansible-master-image
+## Created Dockerfile – Ansible Master 
+docker run -d --name ansible-master-01 \
+    --network project-net -p 2222:22 \
+    -v ~/.ssh_key/master_known_hosts:/home/ansible/.ssh/known_hosts \
+    -v ~/.ssh_key/id_rsa:/home/ansible/.ssh/id_rsa \
+    ansible-master-image
 
 ## Created Dockerfile – Ansible Slave  , ENTRYPOINT take from id_rsa.pub and move it to authorized_keys
-docker run -d --name ansible-slave-01 --network project-net -p 2221:22 -v ./.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys  ansible-slave-image
+docker run -d --name ansible-slave-01 \
+    --network project-net -p 2221:22 \
+    -v ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys \
+    -v ~/.ssh_key/slave_known_hosts:/home/ansible/.ssh/known_hosts \
+    -v ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519 \    
+     ansible-slave-image
 
 ## Check access from master to slave
 docker exec -it ansible-master-01 su - ansible
@@ -127,7 +136,7 @@ README.md
 ## Common docker compose
 
 
-docker compose --env-file .env up -d  --force-recreate
+docker compose --env-file .env up -d       ## --force-recreate
 docker exec -it master-server su - ansible
 # Example of restarting your container with the required privileges
 docker run -d --privileged --name database-server -v /var/lib/docker:/var/lib/docker ubuntu:latest
