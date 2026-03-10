@@ -51,18 +51,22 @@
         mode: '0644'
       register: docker_config
 
-    - name: Перезапустить Docker (если конфиг изменился)
-      systemd:
-        name: docker
-        state: restarted
-        daemon_reload: yes
-      when: docker_config.changed
+    - name: Запустить Docker daemon с новым конфигом
+      shell: |
+        pkill dockerd || true
+        sleep 2
+        if ! pgrep -x dockerd > /dev/null; then
+          nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 &
+          sleep 5
+        fi
+      args:
+        executable: /bin/bash
 
-    - name: Убедиться, что Docker запущен
-      service:
-        name: docker
-        state: started
-        enabled: yes
+    - name: Подождать готовности Docker socket
+      wait_for:
+        path: /var/run/docker.sock
+        state: present
+        timeout: 60
 
     - name: Ensure ansible user is in docker group
       user:
@@ -92,7 +96,7 @@
       debug:
         msg: 
           - "Docker version: {{ docker_version.stdout }}"
-          - "{{ storage.stdout }}"
+          - "Storage: {{ storage.stdout }}"
 
     - name: Add GitHub to known_hosts
       known_hosts:
