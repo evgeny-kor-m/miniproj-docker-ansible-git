@@ -1,7 +1,4 @@
-# --BD---only-----------
-DB_DATA_VOLUME: "shared-volume"
-DB_COMPOSE_DIR: "{{ base_dir }}/db"
 # --pgadmin-------------
-PGADMIN_DEFAULT_EMAIL: "polzovatel@gmail.com"
-PGADMIN_DEFAULT_PASSWORD: "pass"
+var_PGADMIN_DEFAULT_EMAIL: "polzovatel@gmail.com"
+var_PGADMIN_DEFAULT_PASSWORD: "pass"
 
