@@ -56,6 +56,7 @@
         #sleep 2
         nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 &
         sleep 5
+      state: present
 
     - name: Подождать готовности Docker socket
       wait_for:
@@ -109,7 +110,7 @@
           key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
           state: present 
 
-- name: Клонировать private репозиторий
+- name: Clone private repository
   hosts: slaves
   become: yes
   become_user: ansible
