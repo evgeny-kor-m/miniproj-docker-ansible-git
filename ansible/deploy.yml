@@ -42,6 +42,7 @@
               DB_NAME={{ var_DB_NAME }}
               DB_USER={{ var_DB_USER }}
               DB_PASSWORD={{ var_DB_PASSWORD }}
+              APP_PORT={{var_APP_PORT}}
               FLASK_ENV=production
               PYTHONUNBUFFERED=1
               SECRET_KEY=some_random_flask_key

@@ -1,13 +1,13 @@
 services:
   application-crm:
     container_name: app-crm
-    # build:
-    #   context: ..
-    #   dockerfile: ./app/Dockerfile # Way to Dockerfile inside the context
-    # image: app-crm-image # We obviously indicate the name of the image
-    image: evgenykorchev/app-crm-image:v01
+    build:
+      context: ..
+      dockerfile: ./app/Dockerfile # Way to Dockerfile inside the context
+    image: app-crm-image # We obviously indicate the name of the image
+    # image: evgenykorchev/app-crm-image:v01
     ports:
-      - "5000:5000"
+      - "5000:${APP_PORT}"
     environment:
       - DB_HOST=database-server
       - DB_PORT=${DB_PORT}
