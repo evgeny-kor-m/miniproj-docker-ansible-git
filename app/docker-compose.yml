@@ -15,8 +15,8 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-    volumes:
-      - app-data:/volume-data
+    # volumes:
+    #   - app-data:/volume-data
     restart: always
 
 volumes:
