@@ -6,14 +6,7 @@ import psycopg2
 from psycopg2 import Error
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
-
-if not logger.handlers:
-    handler = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
 
 class pgdb:
     def __init__(self,_host,_dbname,_username,_password,_port):
@@ -36,23 +29,21 @@ class pgdb:
                                          host=self.host, 
                                          port=self.port,
                                          connect_timeout=10)
-            print("Connected to PostgreSQL successfully!")
-            logging.info("Connected to PostgreSQL successfully!")
+            logger.info("Connected to PostgreSQL successfully!")
 
             self.cur = self.conn.cursor()
             self.cur.execute("SELECT version();")
             
             db_version = self.cur.fetchone()
-            print(f"PostgreSQL version: {db_version}")
-            logging.info(f"PostgreSQL version: {db_version}")
+            logger.info(f"PostgreSQL version: {db_version}")
 
         except psycopg2.OperationalError as e:
-            error_msg = f"❌ Cannot connect to database at {self.host}:{self.port} - {str(e)}"
+            error_msg = f"Cannot connect to database at {self.host}:{self.port} - {str(e)}"
             logger.error(error_msg)
             raise Exception(error_msg)
         
         except Exception as e:
-            error_msg = f"❌ Database connection failed: {str(e)}"
+            error_msg = f"Database connection failed: {str(e)}"
             logger.error(error_msg)
             raise Exception(error_msg)
 
@@ -62,8 +53,7 @@ class pgdb:
             self.cur.close()
         if self.conn:
             self.conn.close()
-        print("Disconnected from PostgreSQL !")
-        logging.info(f"Disconnected from PostgreSQL !")
+        logger.info(f"Disconnected from PostgreSQL !")
 
     def insertRow(self,username,passw,email):
         sequence_name='get_postgres_table_seq'
@@ -72,8 +62,6 @@ class pgdb:
 
             self.cur.execute(f"SELECT nextval('{sequence_name}');")
             next_value = self.cur.fetchone()[0]
-
-            print(f"Current value of the sequence '{sequence_name}': {next_value}")
 
             with self.conn.cursor() as cur:
                 cur.execute("""
@@ -84,7 +72,7 @@ class pgdb:
 
             return {"ok": "Row successfully inserted to database"}
         except Exception as error:
-            logger.error(f"❌ insertRow Error: {error}")
+            logger.error(f"insertRow Error: {error}")
             if self.conn:
                 self.conn.rollback()
             raise Exception(f"Insert failed: {str(error)}")
@@ -105,7 +93,7 @@ class pgdb:
                 return {"ok": data}
             
         except Exception as error:
-            logger.error(f"❌ selectRows Error: {error}")
+            logger.error(f"selectRows Error: {error}")
             raise Exception(f"Select failed: {str(error)}")
             
         finally:
