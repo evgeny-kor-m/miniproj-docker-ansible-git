@@ -4,7 +4,10 @@ WORKDIR /app
 
 COPY ./app/requirements.txt .
 
-#RUN pip install --upgrade pip
+RUN apt-get update && apt-get install -y \
+    sudo \
+    iputils-ping\
+    netcat-openbsd
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./app .

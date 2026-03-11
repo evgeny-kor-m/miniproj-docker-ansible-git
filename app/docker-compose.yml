@@ -6,6 +6,7 @@ services:
       dockerfile: ./app/Dockerfile # Way to Dockerfile inside the context
     image: app-crm-image # We obviously indicate the name of the image
     # image: evgenykorchev/app-crm-image:v01
+    network_mode: "host" 
     ports:
       - "5000:${APP_PORT}"
     environment:
