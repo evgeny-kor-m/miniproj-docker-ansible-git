@@ -40,7 +40,7 @@ chmod 600 ~/.ssh_key/etc/ssh/ssh_host_ed25519_key
 chmod 600 ~/.ssh_key/*
 ```
 
-## Created Dockerfile – Ansible Master 
+## Created Dockerfile – Ansible Master , ENTRYPOINT change permitions for keys
 ```
 docker build -t ansible-master-image -f ansible-master/Dockerfile .
 docker run -d --name ansible-master-01 \
@@ -50,7 +50,7 @@ docker run -d --name ansible-master-01 \
     ansible-master-image
 ```
 
-## Created Dockerfile – Ansible Slave  , ENTRYPOINT take from id_rsa.pub and move it to authorized_keys
+## Created Dockerfile – Ansible Slave  , ENTRYPOINT change permitions for keys
 ```
 docker build -t ansible-slave-image -f ansible-slave/Dockerfile .
 docker run -d --name ansible-slave-01 \
@@ -92,14 +92,15 @@ docker rm -f app-crm && docker rmi -f app-crm-image
 http://127.0.0.1:5000/healthcheck
 ```
 ## Docker Compose – Application
+```
 docker compose --env-file .env -f ./app/docker-compose.yml up -d    --force-recreate
 docker tag app-crm-image evgenykorchev/app-crm-image:v01
 docker push evgenykorchev/app-crm-image:v01
-
+```
 ## Docker Compose – Database (PostgreSQL + pgAdmin)
-PostgreSQL
-https://github.com/docker-library/docs/blob/master/postgres/README.md#environment-variables
-
+For local testing
+PostgreSQL  https://github.com/docker-library/docs/blob/master/postgres/README.md#environment-variables
+```
 docker pull postgres
 docker pull dpage/pgadmin4
 docker compose --env-file .env -f ./database/docker-compose.yml up -d  --force-recreate
@@ -112,46 +113,43 @@ docker run --name postgresql -d -p 5433:5432  \
                -e POSTGRES_PASSWORD=postgresdb \
                -v shared-volume:/var/lib/postgresql postgres
 
-docker exec -it postgresql psql -U postgres -c "CREATE DATABASE mydb;"
-docker exec -it postgresql psql -U postgres -c "CREATE USER myuser WITH PASSWORD 'mypass123';"
-docker exec -it postgresql psql -U postgres -c "GRANT ALL ON DATABASE mydb TO myuser;"
-docker exec -it postgresql psql -U postgres -d mydb -c "GRANT ALL ON SCHEMA public TO myuser;"
-
 docker exec postgresql env | grep POSTGRES
 -- openning access to postgres from all IP address (from HOST)
     docker exec postgresql cat /var/lib/postgresql/18/docker/pg_hba.conf  | tail -10
     docker exec postgresql bash -c "echo 'host all all 0.0.0.0/0 md5' >> /var/lib/postgresql/18/docker/pg_hba.conf"
     docker restart postgresql
-
-pgAdmin
+```
+pgAdmin - availible
 http://localhost:8080
 polzovatel@gmail.com/pass
 
-
-
-## Inventory file: done
-## Playbook – Installations
-
-## Common docker compose
-
-docker compose --env-file .env up -d       ## --force-recreate
-docker exec -it master-server su - ansible
-# Example of restarting your container with the required privileges
-manually:
+## Common docker compose for Master, Database and Application server
+Example of creation container with the required privileges
+```
 docker run -d --privileged --name database-server -v /var/lib/docker:/var/lib/docker ubuntu:latest
-
+```
+Run and check playbooks:
+```
+docker compose --env-file .env up -d       ## --force-recreate
 ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml --syntax-check
-Examples:
-ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml --tags "clone_repo"
-ansible -i /app/ansible/inventory.yml db_servers -m shell -a "cd /home/ansible/mini-project && docker compose --env-file .env -f database/docker-compose.yml down -v" -b
-ansible -i /app/ansible/inventory.yml app_servers -m shell -a "cd /home/ansible/mini-project && docker compose --env-file .env -f app/docker-compose.yml down -v" -b
-ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker logs postgresql | tail -20" -b
-ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker exec postgresql psql -U postgres -d postgres -c '\\dt'" -b
-ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-playbook-deploy.yml 
-
+ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-playbook-deploy.yml --check
+```
+Connect to servers:
+```
 ssh -i /home/ansible/.ssh/id_rsa ansible@database-server
 ssh -i /home/ansible/.ssh/id_rsa ansible@application-server
 
 docker exec -it database-server su - ansible
 docker exec -it application-server su - ansible
 docker exec -it master-server su - ansible
+```
+
+Useble command for example:
+```
+ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml --tags "clone_repo"
+ansible -i /app/ansible/inventory.yml db_servers -m shell -a "cd /home/ansible/mini-project && docker compose --env-file .env -f database/docker-compose.yml down -v" -b
+ansible -i /app/ansible/inventory.yml app_servers -m shell -a "cd /home/ansible/mini-project && docker compose --env-file .env -f app/docker-compose.yml down -v" -b
+ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker logs postgresql | tail -20" -b
+ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker exec postgresql psql -U postgres -d postgres -c '\\dt'" -b
+ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-playbook-deploy.yml 
+```
