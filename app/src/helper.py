@@ -63,6 +63,8 @@ class pgdb:
             self.cur.execute(f"SELECT nextval('{sequence_name}');")
             next_value = self.cur.fetchone()[0]
 
+            logger.info(f"next_value : {next_value} , sequence_name : {sequence_name}")
+
             with self.conn.cursor() as cur:
                 cur.execute("""
                     INSERT INTO POSTGRES_TABLE (RLO, USERNAME, PASSWORD, EMAIL)
