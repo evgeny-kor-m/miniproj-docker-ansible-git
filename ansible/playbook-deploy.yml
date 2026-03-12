@@ -19,11 +19,7 @@
             owner: ansible
             group: ansible
             mode: '0600' # permissions: read/write
-
-        - name: Start Docker Compose for Database
-          shell: "docker compose --env-file .env -f ./database/docker-compose.yml up -d" 
-          args:
-            chdir: "{{ base_dir }}" # Execute command in the base directory
+          notify: "Restart db docker"
 
     # Application Configuration Section
     - name: Prepare environment for Flask Application
@@ -41,19 +37,39 @@
               DB_USER={{ var_DB_USER }}
               DB_PASSWORD={{ var_DB_PASSWORD }}
               APP_PORT={{var_APP_PORT}}
-              FLASK_ENV=production
               PYTHONUNBUFFERED=1
-              SECRET_KEY=some_random_flask_key
             owner: ansible
             group: ansible
             mode: '0600'
+          notify: "Restart app docker"
 
-        - name: Start Docker Compose for Application
-          shell: "docker compose --env-file .env -f ./app/docker-compose.yml up -d" 
-          args:
-            chdir: "{{ base_dir }}"
+    # temporay
+    - name: Flush handlers to events
+      meta: flush_handlers
 
-    # Verification Section
+    - name: Print Database restart status
+      debug:
+        var: db_restart_event
+      when: db_restart_event is defined
+
+    - name: Print Application restart status
+      debug:
+        var: app_restart_event
+      when: app_restart_event is defined
+
+      # write to log
+    - name: Log events to file
+      lineinfile:
+        path: "{{ deploy_log_file }}"
+        create: yes
+        line: >
+          [{{ ansible_date_time.iso8601 }}] 
+          Host: {{ inventory_hostname }} 
+          DB_Restart: {{ db_restart_event.changed | default('skipped') }}
+          App_Restart: {{ app_restart_event.changed | default('skipped') }}
+          Output: {{ (db_restart_event.stdout | default(app_restart_event.stdout | default('No output'))) }}
+
+    # verification section
     - name: Check running containers
       shell: "docker ps" 
       register: docker_status 
@@ -61,3 +77,16 @@
     - name: Display deployment status
       debug: 
         var: docker_status.stdout_lines
+
+  handlers:
+    - name: Restart db docker
+      shell: "docker compose --env-file .env -f ./database/docker-compose.yml up -d --remove-orphans"  # remove orphan if container changed
+      args:
+        chdir: "{{ base_dir }}"
+      register: db_restart_event
+
+    - name: Restart app docker
+      shell: "docker compose --env-file .env -f ./app/docker-compose.yml up -d --remove-orphans"
+      args:
+        chdir: "{{ base_dir }}"
+      register: app_restart_event
