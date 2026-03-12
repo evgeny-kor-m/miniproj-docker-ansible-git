@@ -3,73 +3,48 @@ CREATE TABLE POSTGRES_TABLE_OLD AS
 
 */
 
-
-
-
 drop table if EXISTS POSTGRES_TABLE;
 drop sequence if exists PUT_POSTGRES_TABLE_SEQ; 
 drop sequence if exists GET_POSTGRES_TABLE_SEQ; 
 
-CREATE TABLE POSTGRES_TABLE
-(
-  RLO          numeric(9),
-  USERNAME     varchar(25),
-  PASSWORD     varchar(25) DEFAULT NULL,
-  EMAIL        varchar(50) DEFAULT NULL,  
-  CREATED_AT   timestamp DEFAULT CURRENT_TIMESTAMP,
-  REMARKS      varchar(255) DEFAULT NULL
+
+CREATE TABLE POSTGRES_TABLE (
+    RLO          numeric(9),
+    USERNAME     varchar(25),
+    PASSWORD     varchar(25) DEFAULT NULL,
+    EMAIL        varchar(50) DEFAULT NULL,  
+    CREATED_AT   timestamp DEFAULT CURRENT_TIMESTAMP,
+    REMARKS      varchar(255) DEFAULT NULL
 );
 
 
-CREATE INDEX POSTGRES_TABLE_3UQ ON POSTGRES_TABLE (USERNAME, RLO);
 CREATE UNIQUE INDEX POSTGRES_TABLE_PK2 ON POSTGRES_TABLE (RLO);
+CREATE INDEX POSTGRES_TABLE_3UQ ON POSTGRES_TABLE (USERNAME, RLO);
 
 
+CREATE SEQUENCE put_postgres_table_seq START WITH 1;
+CREATE SEQUENCE get_postgres_table_seq START WITH 1;
+
+-- 5. Вставляем начальные данные
 INSERT INTO POSTGRES_TABLE (RLO, USERNAME, PASSWORD, EMAIL, REMARKS) VALUES
     (1, 'admin', 'admin123', 'admin@example.com', 'System administrator'),
     (2, 'john_doe', 'pass123', 'john@example.com', 'Regular user'),
     (3, 'jane_smith', 'jane456', 'jane@example.com', 'Power user');
 
 
---select count(*) from POSTGRES_TABLE;
---truncate table POSTGRES_TABLE;
-
-CREATE SEQUENCE PUT_POSTGRES_TABLE_SEQ MINVALUE 1 START WITH 1 INCREMENT BY 1 CACHE 1;
-CREATE SEQUENCE GET_POSTGRES_TABLE_SEQ MINVALUE 1 START WITH 1 INCREMENT BY 1 CACHE 1;
-commit;
-
-
 DO $$
 DECLARE
     max_id BIGINT;
-    seq_name TEXT := 'put_postgres_table_seq';
-    table_name TEXT := 'postgres_table';
 BEGIN
-    SELECT COALESCE(MAX(RLO), 0) INTO max_id FROM POSTGRES_TABLE;
+
+    SELECT COALESCE(MAX(RLO), 0)::BIGINT INTO max_id FROM POSTGRES_TABLE;
 
     IF max_id > 0 THEN
-        PERFORM setval(seq_name, max_id, true);
+
+        PERFORM setval('put_postgres_table_seq', max_id, true);
     ELSE
-        PERFORM setval(seq_name, 1, false);
+        PERFORM setval('put_postgres_table_seq', 1, false);
     END IF;
+    
+    RAISE NOTICE 'Sequence put_postgres_table_seq synchronized at %', max_id;
 END $$;
-
-/*----
-DROP INDEX if exists POSTGRES_TABLE_PK2;
-update POSTGRES_TABLE  set RLO = 0;commit;
-
-create sequence temp_sequence_x;
-update POSTGRES_TABLE  set RLO = nextval('temp_sequence_x');
-drop sequence temp_sequence_x; commit;
-
-CREATE UNIQUE INDEX POSTGRES_TABLE_PK2 ON POSTGRES_TABLE (RLO)
-TABLESPACE pg_default;
-commit;
-------*/
-
-
---Exec  CHECK_SEQ_STATUS('GET_POSTGRES_TABLE_SEQ','PUT_POSTGRES_TABLE_SEQ','POSTGRES_TABLE');
---??? Exec  INITIATE_SEQ('GET_POSTGRES_TABLE_SEQ','PUT_POSTGRES_TABLE_SEQ','POSTGRES_TABLE');
---Exec  CLEAN_USED_SEQ('GET_POSTGRES_TABLE_SEQ','PUT_POSTGRES_TABLE_SEQ','POSTGRES_TABLE');
-
-
