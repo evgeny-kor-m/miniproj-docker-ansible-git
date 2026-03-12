@@ -35,12 +35,8 @@ chmod 600 ~/.ssh_key/etc/ssh/ssh_host_ed25519_key
 chmod 600 ~/.ssh_key/*
 
 
-
-## -- next time cp -r shared-folder/.shh_key/ ~/.ssh_key && 
-chmod 600 known_hosts
-sudo chown -R appuser:appuser ~/.ssh_key
-
 ## Created Dockerfile – Ansible Master 
+docker build -t ansible-master-image -f ansible-master/Dockerfile .
 docker run -d --name ansible-master-01 \
     --network project-net -p 2222:22 \
     -v ~/.ssh_key/master_known_hosts:/home/ansible/.ssh/known_hosts \
@@ -48,6 +44,7 @@ docker run -d --name ansible-master-01 \
     ansible-master-image
 
 ## Created Dockerfile – Ansible Slave  , ENTRYPOINT take from id_rsa.pub and move it to authorized_keys
+docker build -t ansible-slave-image -f ansible-slave/Dockerfile .
 docker run -d --name ansible-slave-01 \
     --network project-net -p 2221:22 \
     -v ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys \
@@ -85,8 +82,8 @@ http://127.0.0.1:5000/healthcheck
 
 ## Docker Compose – Application
 docker compose --env-file .env -f ./app/docker-compose.yml up -d    --force-recreate
-
-
+docker tag app-crm-image evgenykorchev/app-crm-image:v01
+docker push evgenykorchev/app-crm-image:v01
 
 ## Docker Compose – Database (PostgreSQL + pgAdmin)
 PostgreSQL
