@@ -129,26 +129,18 @@ docker exec -it master-server su - ansible
 manually:
 docker run -d --privileged --name database-server -v /var/lib/docker:/var/lib/docker ubuntu:latest
 
-
-ansible -i /app/ansible/inventory.yml slaves -m ping
 ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml --syntax-check
+Examples:
 ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml --tags "clone_repo"
-
 ansible -i /app/ansible/inventory.yml db_servers -m shell -a "cd /home/ansible/mini-project && docker compose --env-file .env -f database/docker-compose.yml down -v" -b
 ansible -i /app/ansible/inventory.yml app_servers -m shell -a "cd /home/ansible/mini-project && docker compose --env-file .env -f app/docker-compose.yml down -v" -b
-
-ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml --tags "clone_repo"
-
-
 ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker logs postgresql | tail -20" -b
-
 ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker exec postgresql psql -U postgres -d postgres -c '\\dt'" -b
-
-
 ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-playbook-deploy.yml 
 
 ssh -i /home/ansible/.ssh/id_rsa ansible@database-server
 ssh -i /home/ansible/.ssh/id_rsa ansible@application-server
 
 docker exec -it database-server su - ansible
-
+docker exec -it application-server su - ansible
+docker exec -it master-server su - ansible
