@@ -2,13 +2,17 @@
 
 ### Part 1
 
-## Created a Private Repository житч README file - mini-project
+## Created a Private Repository with README file - mini-project
+```
 git clone https://github.com/evgeny-kor-m/mini-project.git
 git branch worker
 git checkout worker
 git branch
-
-nano ~/.docker/config.json -> {   "auths": {}  }  - Connects Docker running in console to Windows Credential Manager.
+```
+Connects Docker running in console to Windows Credential Manager.
+```
+nano ~/.docker/config.json -> {   "auths": {}  } 
+```
 
 Created Makefile
 ```
@@ -17,6 +21,7 @@ make prerequisite - create net, volume
 ```
 
 ## Create ssh_key folder and generate key
+```
 mkdir ~/.ssh_key
 mkdir -p ~/.ssh_key/etc/ssh
 ssh-keygen -A -f ~/.ssh_key
@@ -33,17 +38,20 @@ chmod 644 ~/.ssh_key/*.pub ~/.ssh_key/slave_known_hosts ~/.ssh_key/master_known_
 chmod 600 ~/.ssh_key/etc/ssh/ssh_host_rsa_key
 chmod 600 ~/.ssh_key/etc/ssh/ssh_host_ed25519_key
 chmod 600 ~/.ssh_key/*
-
+```
 
 ## Created Dockerfile – Ansible Master 
+```
 docker build -t ansible-master-image -f ansible-master/Dockerfile .
 docker run -d --name ansible-master-01 \
     --network project-net -p 2222:22 \
     -v ~/.ssh_key/master_known_hosts:/home/ansible/.ssh/known_hosts \
     -v ~/.ssh_key/id_rsa:/home/ansible/.ssh/id_rsa \
     ansible-master-image
+```
 
 ## Created Dockerfile – Ansible Slave  , ENTRYPOINT take from id_rsa.pub and move it to authorized_keys
+```
 docker build -t ansible-slave-image -f ansible-slave/Dockerfile .
 docker run -d --name ansible-slave-01 \
     --network project-net -p 2221:22 \
@@ -51,35 +59,38 @@ docker run -d --name ansible-slave-01 \
     -v ~/.ssh_key/slave_known_hosts:/home/ansible/.ssh/known_hosts \
     -v ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519 \    
      ansible-slave-image
-
+```
 ## Check access from master to slave
+```
 docker exec -it ansible-master-01 su - ansible
 ssh-keyscan -t rsa ansible-slave-01 >> /home/ansible/.ssh/known_hosts
 ansible -i /app/ansible/inventory.yml slaves -m ping
 ssh -i /home/ansible/.ssh/id_rsa ansible@ansible-slave-01
-
+```
 ## Created Docker Compose – Ansible
+```
 docker compose -f ./ansible/docker-compose.yml --env-file .env  up -d
 docker compose -f ./ansible/docker-compose.yml --env-file .env  build
 make start-ansible - create images and up containers
 make trust - Ssh-keyscan for slaves
-
+```
 ## Push both images to DockerHub as Public repositories
+```
 docker tag  ansible-slave-image  evgenykorchev/ansible-slave-image:v02
 docker push evgenykorchev/ansible-slave-image:v02
 
 docker tag ansible-master-image evgenykorchev/ansible-master-image:v02
 docker push evgenykorchev/ansible-master-image:v02
-
-
-
+```
 
 ### Part 2
 ## Dockerfile – Application
+Manuall run application:
+```
 python app/src/app_crm.py
 docker rm -f app-crm && docker rmi -f app-crm-image
 http://127.0.0.1:5000/healthcheck
-
+```
 ## Docker Compose – Application
 docker compose --env-file .env -f ./app/docker-compose.yml up -d    --force-recreate
 docker tag app-crm-image evgenykorchev/app-crm-image:v01
