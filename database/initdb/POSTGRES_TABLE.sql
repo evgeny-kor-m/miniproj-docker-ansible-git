@@ -47,10 +47,9 @@ DECLARE
 BEGIN
 
 BEGIN
-    -- Берем макс из таблицы
-    SELECT COALESCE(MAX(RLO), 0) INTO max_id FROM table_name;
 
-    -- Если в таблице есть данные, двигаем последовательность на этот ID
+    SELECT COALESCE(MAX(RLO), 0) INTO max_id FROM POSTGRES_TABLE;
+
     IF max_id > 0 THEN
         PERFORM setval(seq_name, max_id, true);
     ELSE
