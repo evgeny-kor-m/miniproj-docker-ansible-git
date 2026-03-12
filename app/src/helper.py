@@ -56,7 +56,7 @@ class pgdb:
         logger.info(f"Disconnected from PostgreSQL !")
 
     def insertRow(self,username,passw,email):
-        sequence_name='get_postgres_table_seq'
+        sequence_name='put_postgres_table_seq'
         try:
             self.pg_connect()
 

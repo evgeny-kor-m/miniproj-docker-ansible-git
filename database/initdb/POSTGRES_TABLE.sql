@@ -70,7 +70,7 @@ BEGIN
     RAISE NOTICE 'Sequence % sync. Current max RLO in table: %. next value: %', 
                  seq_name, row_cnt, (CASE WHEN row_cnt = 0 THEN 1 ELSE row_cnt + 1 END);
 END $$;
-
+commit;
 
 /*----
 DROP INDEX if exists POSTGRES_TABLE_PK2;
