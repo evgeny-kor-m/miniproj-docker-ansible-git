@@ -6,6 +6,8 @@ github_key_file: "/home/ansible/.ssh/id_ed25519"
 git_branch: "worker"
 ansible_user_name: "ansible"
 
+
+ansible_test: "test"
 deploy_log_file: "/home/ansible/mini-project/ansible/log/deploy_events.log"
 
 #------common---------------
