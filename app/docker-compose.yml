@@ -27,6 +27,7 @@ services:
       context: ..
       dockerfile: ./app/frontend/Dockerfile
     container_name: app-frontend
+    #  image: evgenykorchev/app-frontend-image:v01 # Замените на ваш собранный образ
     restart: always
     environment:
       BACKEND_API_HOST: application-crm  # Backend service name

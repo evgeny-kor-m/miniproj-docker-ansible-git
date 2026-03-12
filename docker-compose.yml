@@ -8,6 +8,7 @@ services:
     ports:
       - "2221:22"
       - "5000:5000"
+      - "7000:7000"
     volumes:
        # (Master -> Slave)
       - ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys
