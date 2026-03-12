@@ -90,10 +90,10 @@
           - "Docker version: {{ docker_version.stdout }}" 
           - "Storage: {{ storage.stdout }}" 
 
-    - name: Print daemon restart status
-      debug:
-        var: daemon_restart_event
-      when: daemon_restart_event is defined
+    # - name: Print daemon restart status
+    #   debug:
+    #     var: daemon_restart_event
+    #   when: daemon_restart_event is defined
 
       # write to log
     - name: Log events to file

@@ -121,21 +121,12 @@ polzovatel@gmail.com/pass
 ## Inventory file: done
 ## Playbook – Installations
 
-
-
-
-
-
-Playbook – Docker Compose deployment
-README.md
-
-
 ## Common docker compose
-
 
 docker compose --env-file .env up -d       ## --force-recreate
 docker exec -it master-server su - ansible
 # Example of restarting your container with the required privileges
+manually:
 docker run -d --privileged --name database-server -v /var/lib/docker:/var/lib/docker ubuntu:latest
 
 

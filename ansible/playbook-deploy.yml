@@ -52,15 +52,15 @@
     - name: Flush handlers to events
       meta: flush_handlers
 
-    - name: Print DB restart status
-      debug:
-        var: db_restart_event
-      when: db_restart_event is defined
+    # - name: Print DB restart status
+    #   debug:
+    #     var: db_restart_event
+    #   when: db_restart_event is defined
 
-    - name: Print APP restart status
-      debug:
-        var: app_restart_event
-      when: app_restart_event is defined
+    # - name: Print APP restart status
+    #   debug:
+    #     var: app_restart_event
+    #   when: app_restart_event is defined
 
       # write to log
     - name: Log events to file
