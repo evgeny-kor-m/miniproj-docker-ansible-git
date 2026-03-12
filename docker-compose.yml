@@ -25,26 +25,34 @@ services:
       DOCKER_TLS_CERTDIR: ""   # Disable TLS for simplicity
     ports:
       - "2222:22"
-      - "5433:5432"  # Postgres
-      - "8080:80"    # PgAdmin
+      - "127.0.0.1:5433:5432"  # Postgres
+      - "127.0.0.1:8080:80"    # PgAdmin
     volumes:
        # (Master -> Slave) 
       - ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys
       - ~/.ssh_key/slave_known_hosts:/home/ansible/.ssh/known_hosts
       # (Slave -> GitHub) (ED25519)
       - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
+    depends_on:
+      - master-service
 
   master-service:
     image: evgenykorchev/ansible-master-image:v02
     container_name: master-server
     ports:
-      - "2023:22"
+      - "127.0.0.1:2023:22"
     volumes:
       # (Master -> Slave) (RSA)
       - ~/.ssh_key/id_rsa:/home/ansible/.ssh/id_rsa
       - ~/.ssh_key/master_known_hosts:/home/ansible/.ssh/known_hosts
       # temporary to edit online
       - ./ansible:/app/ansible
+    # command:
+    #   - /bin/bash
+    #   - -c
+    #   - |
+    #     ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml &&
+    #     ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-deploy.yml
   
 networks:
   default:

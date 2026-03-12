@@ -93,6 +93,7 @@ http://127.0.0.1:5000/healthcheck
 ```
 ## Docker Compose – Application
 ```
+docker build -t app-frontend-image -f app/backend/Dockerfile .
 docker compose --env-file .env -f ./app/docker-compose.yml up -d    --force-recreate
 docker tag app-crm-image evgenykorchev/app-crm-image:v01
 docker push evgenykorchev/app-crm-image:v01
@@ -130,9 +131,10 @@ docker run -d --privileged --name database-server -v /var/lib/docker:/var/lib/do
 ```
 Run and check playbooks:
 ```
-docker compose --env-file .env up -d       ## --force-recreate
+docker compose --env-file .env config ## check syntaxis
+docker compose --env-file .env up -d   ## --force-recreate   ## --remove-orphans
 ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml --syntax-check
-ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-playbook-deploy.yml --check
+ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-deploy.yml --check
 ```
 Connect to servers:
 ```
@@ -151,5 +153,4 @@ ansible -i /app/ansible/inventory.yml db_servers -m shell -a "cd /home/ansible/m
 ansible -i /app/ansible/inventory.yml app_servers -m shell -a "cd /home/ansible/mini-project && docker compose --env-file .env -f app/docker-compose.yml down -v" -b
 ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker logs postgresql | tail -20" -b
 ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker exec postgresql psql -U postgres -d postgres -c '\\dt'" -b
-ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-playbook-deploy.yml 
 ```
