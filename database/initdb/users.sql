@@ -7,18 +7,24 @@ ON CONFLICT (RLO) DO NOTHING;
 DO $$
 DECLARE
     row_cnt BIGINT;
-    PUT_SeqName TEXT := 'PUT_POSTGRES_TABLE_SEQ';
+    seq_name TEXT := 'put_postgres_table_seq';
+    table_name TEXT := 'postgres_table';
 BEGIN
 
-    EXECUTE 'SELECT count(*) FROM POSTGRES_TABLE' INTO row_cnt;
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = lower(table_name)) THEN
+        RAISE EXCEPTION 'Table % not found!', table_name;
+    END IF;
 
-    row_cnt := row_cnt + 1;
+    EXECUTE format('SELECT COALESCE(MAX(RLO), 0) FROM %I', table_name) INTO row_cnt;
 
-    EXECUTE 'DROP SEQUENCE IF EXISTS ' || quote_ident(PUT_SeqName); 
+    EXECUTE format('CREATE SEQUENCE IF NOT EXISTS %I', seq_name);
 
-    EXECUTE 'CREATE SEQUENCE ' || quote_ident(PUT_SeqName) || 
-            ' START WITH ' || row_cnt || 
-            ' MINVALUE 1 MAXVALUE 1000000000000000 INCREMENT BY 1 NO CACHE NO CYCLE';
-            
-    RAISE NOTICE 'Sequence % created starting with %', PUT_SeqName, row_cnt;
+    IF row_cnt = 0 THEN
+        PERFORM setval(seq_name, 1, false);
+    ELSE
+        PERFORM setval(seq_name, row_cnt, true);
+    END IF;
+
+    RAISE NOTICE 'Sequence % sync. Current max RLO in table: %. next value: %', 
+                 seq_name, row_cnt, (CASE WHEN row_cnt = 0 THEN 1 ELSE row_cnt + 1 END);
 END $$;

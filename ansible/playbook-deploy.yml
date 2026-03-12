@@ -1,0 +1,63 @@
+- name: Deploy using existing docker-compose files
+  hosts: slaves 
+  become: yes   # sudo privileges
+  
+  tasks:
+      # Database Configuration Section
+    - name: Prepare environment for Database
+      when: "'db_servers' in group_names"  # to 'db_servers' group
+      block:
+        - name: Create .env file for Database
+          copy: # Generate .env
+            dest: "{{ base_dir }}/.env"
+            content: |
+              POSTGRES_DB={{ var_DB_NAME }}
+              POSTGRES_USER={{ var_DB_USER }}
+              POSTGRES_PASSWORD={{ var_DB_PASSWORD }}
+              PGADMIN_DEFAULT_EMAIL={{ var_PGADMIN_DEFAULT_EMAIL }}
+              PGADMIN_DEFAULT_PASSWORD={{ var_PGADMIN_DEFAULT_PASSWORD }}
+            owner: ansible
+            group: ansible
+            mode: '0600' # permissions: read/write
+
+        - name: Start Docker Compose for Database
+          shell: "docker compose --env-file .env -f ./database/docker-compose.yml up -d" 
+          args:
+            chdir: "{{ base_dir }}" # Execute command in the base directory
+
+    # Application Configuration Section
+    - name: Prepare environment for Flask Application
+      when: "'app_servers' in group_names"  # only 'app_servers' group
+      block:
+        - name: Create .env file for Application
+          copy: 
+            dest: "{{ base_dir }}/.env"
+            content: |
+              # Fetching DB host IP from hostvars for cross-node communication
+              # DATABASE_URL=postgresql://{{ var_DB_USER }}:{{ var_DB_PASSWORD }}@{{ hostvars['db-slave-node']['ansible_host'] }}:5433/{{ var_DB_NAME }}
+              DB_HOST={{ hostvars['db-slave-node']['ansible_host'] }}
+              DB_PORT={{ var_DB_PORT }}
+              DB_NAME={{ var_DB_NAME }}
+              DB_USER={{ var_DB_USER }}
+              DB_PASSWORD={{ var_DB_PASSWORD }}
+              APP_PORT={{var_APP_PORT}}
+              FLASK_ENV=production
+              PYTHONUNBUFFERED=1
+              SECRET_KEY=some_random_flask_key
+            owner: ansible
+            group: ansible
+            mode: '0600'
+
+        - name: Start Docker Compose for Application
+          shell: "docker compose --env-file .env -f ./app/docker-compose.yml up -d" 
+          args:
+            chdir: "{{ base_dir }}"
+
+    # Verification Section
+    - name: Check running containers
+      shell: "docker ps" 
+      register: docker_status 
+
+    - name: Display deployment status
+      debug: 
+        var: docker_status.stdout_lines

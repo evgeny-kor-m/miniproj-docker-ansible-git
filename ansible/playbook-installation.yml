@@ -1,17 +1,17 @@
-- name: Install infrastructure # Root play to configure the base infrastructure on target nodes
-  hosts: slaves # Targeted host group defined in the inventory
-  become: yes # Execute all tasks with administrative (sudo) privileges
+- name: Install infrastructure 
+  hosts: slaves # host group in inventory
+  become: yes # (sudo) privileges
 
-  tasks: # List of operations to perform
-    - name: Dependency installation # Task to install essential system packages
-      apt: # Using the apt package manager module
-        name: # List of packages to be installed
+  tasks: 
+    - name: Dependency installation 
+      apt: 
+        name: 
           - apt-transport-https # Allows apt to use repositories over HTTPS
           - ca-certificates # Common CA certificates for SSL/TLS verification
-          - curl # Tool for transferring data with URLs
+          - curl 
           - gnupg # GNU Privacy Guard for secure communication
           - lsb-release # Provides LSB (Linux Standard Base) information
-          - git # Distributed version control system
+          - git 
           - fuse-overlayfs # Userspace overlayfs implementation for Docker storage
         state: present # Ensure these packages are installed
         update_cache: yes # Run 'apt-get update' before installing
@@ -19,14 +19,14 @@
     - name: Add Docker GPG key # Task to verify Docker package authenticity
       apt_key: # Module to manage apt repository keys
         url: https://download.docker.com/linux/ubuntu/gpg # Official Docker GPG key URL
-        state: present # Ensure the key exists in the system keyring
+        state: present 
 
-    - name: Add Docker repository # Task to define the Docker package source
+    - name: Add Docker repository 
       apt_repository: # Module to manage apt software sources
-        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable" # Repo string with dynamic OS release version
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable" 
         state: present # Ensure the repository is added to sources.list
 
-    - name: Install Docker components # Task to install the core Docker engine
+    - name: Install Docker components
       apt: # Using apt module again
         name: # Specific Docker packages to install
           - docker-ce # Docker Community Edition engine
@@ -36,9 +36,14 @@
         state: present # Ensure installation
         update_cache: yes # Refresh cache to include newly added Docker repo
 
-    - name: Create Docker daemon configuration # Task to configure Docker daemon behavior
-      copy: # Module to write content to a file
-        content: | # Inline JSON configuration for Docker
+- name: Docker configuration
+  hosts: slaves # host group in inventory
+  become: yes # (sudo) privileges
+
+  tasks: 
+    - name: Create Docker daemon configuration
+      copy: 
+        content: | 
           {
             "storage-driver": "fuse-overlayfs",
             "log-driver": "json-file",
@@ -47,85 +52,83 @@
               "max-file": "3"
             }
           }
-        dest: /etc/docker/daemon.json # Destination path for the config file
-        mode: '0644' # Set read permissions for all, write only for owner
-      register: docker_config # Save task result to check for changes later
+        dest: /etc/docker/daemon.json 
+        mode: '0644' 
 
-    - name: Start Docker daemon with new configuration # Task to apply settings manually
-      shell: | # Execute raw shell commands
+    - name: Start Docker daemon manually 
+      shell: | 
         pkill dockerd || true # Kill existing Docker process (ignore if not running)
         sleep 2 # Brief pause to allow process cleanup
         if ! pgrep -x dockerd > /dev/null; then # Check if Docker is actually stopped
           nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 & # Start Docker in background
           sleep 5 # Wait for initialization
         fi
-      args: # Extra arguments for the shell module
-        executable: /bin/bash # Use Bash specifically for the script syntax
+      args: # Extra arguments 4 shell module
+        executable: /bin/bash # Use Bash
 
     - name: Wait for Docker socket readiness # Task to ensure the service is responsive
-      wait_for: # Module to block until a condition is met
-        path: /var/run/docker.sock # Check for the existence of the socket file
+      wait_for: # until a condition is met
+        path: /var/run/docker.sock # Check if socket file exist
         state: present # Proceed once the file is available
         timeout: 60 # Stop waiting and fail after 60 seconds
 
-    - name: Ensure ansible user is in docker group # Task to allow non-root Docker usage
-      user: # Module to manage system users
-        name: "{{ ansible_user }}" # The user defined in Ansible connection settings
-        groups: docker # Add user to the 'docker' system group
-        append: yes # Keep existing group memberships
+    - name: Add user Ansible to docker group
+      user: 
+        name: "{{ ansible_user }}"
+        groups: docker 
+        append: yes 
 
-    - name: Fix docker.sock permissions # Task to ensure the socket is accessible
-      file: # Module to manage file properties
-        path: /var/run/docker.sock # Path to the Docker Unix socket
-        mode: '0666' # Allow read/write for everyone (standard for many CI setups)
-        owner: root # Set owner to root
-        group: docker # Set group to docker
+    - name: Fix docker.sock permissions
+      file: 
+        path: /var/run/docker.sock 
+        mode: '0666' 
+        owner: root # Set owner
+        group: docker # Set group
 
-    - name: Check Docker version # Task to verify installation
-      command: docker --version # Run the version command
-      register: docker_version # Store the output in a variable
-      become_user: ansible # Run this specific command as the 'ansible' user
+    - name: Check Docker version 
+      command: docker --version 
+      register: docker_version 
+      become_user: ansible # Run as ansible user
 
-    - name: Check Storage Driver # Task to verify the fuse-overlayfs config
-      shell: docker info | grep "Storage Driver" # Search for the driver in Docker info
-      register: storage # Store the output string
-      changed_when: false # This task never modifies the system state
-      become_user: ansible # Run as 'ansible' user to verify group permissions
+    - name: Check Storage Driver
+      shell: docker info | grep "Storage Driver"
+      register: storage 
+      changed_when: false # never modifies
+      become_user: ansible 
 
-    - name: Show Installation Status # Task to display results to the console
+    - name: Show Installation Status 
       debug: # Module to print statements during execution
-        msg: # Multi-line message showing captured variables
-          - "Docker version: {{ docker_version.stdout }}" # Display version string
-          - "Storage: {{ storage.stdout }}" # Display active storage driver
+        msg: 
+          - "Docker version: {{ docker_version.stdout }}" 
+          - "Storage: {{ storage.stdout }}" 
 
-    - name: Add GitHub to known_hosts # Task to prevent SSH prompts during cloning
-      known_hosts: # Module to manage SSH known_hosts file
-        name: github.com # The host to trust
-        key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}" # Dynamically fetch GitHub's public key
-        state: present # Ensure the key is stored
-
-- name: Clone private repository # Second play to handle application source code
-  hosts: slaves # Continue on the slave nodes
-  become: yes # Use sudo
-  become_user: ansible # Execute tasks specifically as the 'ansible' user
+- name: Clone private repository 
+  hosts: slaves 
+  become: yes 
+  become_user: ansible 
   
-  tasks: # Tasks for the cloning phase
-    - name: Ensure destination directory exists # Task to prepare the filesystem
-      file: # Module for directory management
-        path: "{{ clone_dest }}" # Target path from variables
-        state: directory # Ensure it is a directory, not a file
-        owner: "{{ ansible_user_name }}" # Assign ownership to the current user
-        group: "{{ ansible_user_name }}" # Assign group to the current user
-        mode: '0755' # Standard permissions for directories
+  tasks: 
 
-    - name: Clone repository # Task to pull the source code
+    - name: Add GitHub to known_hosts 
+      known_hosts: # Module to manage SSH known_hosts file
+        name: github.com 
+        key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}" # Dynamically fetch GitHub public key
+        state: present 
+        
+    - name: Check directory exists 
+      file: 
+        path: "{{ clone_dest }}" 
+        state: directory 
+        owner: "{{ ansible_user_name }}" 
+        group: "{{ ansible_user_name }}" 
+        mode: '0755' 
+
+    - name: Clone repository
       git: # Module for Git operations
-        repo: "{{ github_repo }}" # SSH URL of the private repository
-        dest: "{{ clone_dest }}" # Target local path
-        key_file: "{{ github_key_file }}" # Path to the SSH private key for auth
-        accept_hostkey: yes # Automatically accept the host key (redundant with known_hosts but safe)
-        version: "{{ git_branch }}" # Specific branch or tag to checkout
-        force: yes # Overwrite local changes if they exist
-      tags: clone_repo # Tag to allow running only this specific task
-      environment: # Temporary environment variables for the task
-        GIT_SSH_COMMAND: "ssh -i {{ github_key_file }} -o StrictHostKeyChecking=no" # Force SSH to use specific key
+        repo: "{{ github_repo }}" 
+        dest: "{{ clone_dest }}" 
+        key_file: "{{ github_key_file }}" 
+        accept_hostkey: yes # automatically accept the host key
+        version: "{{ git_branch }}" # branch
+        force: yes # overwrite local files
+      tags: clone_repo 
