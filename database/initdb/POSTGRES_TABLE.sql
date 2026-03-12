@@ -16,32 +16,23 @@ CREATE TABLE POSTGRES_TABLE
   USERNAME     varchar(25),
   PASSWORD     varchar(25) DEFAULT NULL,
   EMAIL        varchar(50) DEFAULT NULL,  
-  CREATED_AT     timestamp default CURRENT_TIMESTAMP,
-  REMARKS         varchar(255) DEFAULT NULL
-)
-TABLESPACE pg_default;
+  CREATED_AT   timestamp DEFAULT CURRENT_TIMESTAMP,
+  REMARKS      varchar(255) DEFAULT NULL
+);
 
 
-CREATE INDEX POSTGRES_TABLE_3UQ ON POSTGRES_TABLE
-(USERNAME, RLO)
-TABLESPACE pg_default;
-
-
-CREATE UNIQUE INDEX POSTGRES_TABLE_PK2 ON POSTGRES_TABLE
-(RLO)
-TABLESPACE pg_default;
+CREATE INDEX POSTGRES_TABLE_3UQ ON POSTGRES_TABLE (USERNAME, RLO);
+CREATE UNIQUE INDEX POSTGRES_TABLE_PK2 ON POSTGRES_TABLE (RLO);
 
 
 INSERT INTO POSTGRES_TABLE (RLO, USERNAME, PASSWORD, EMAIL, REMARKS) VALUES
-    ('1', 'admin', 'admin123', 'admin@example.com', 'System administrator'),
-    ('2', 'john_doe', 'pass123', 'john@example.com', 'Regular user'),
-    ('3', 'jane_smith', 'jane456', 'jane@example.com', 'Power user')
+    (1, 'admin', 'admin123', 'admin@example.com', 'System administrator'),
+    (2, 'john_doe', 'pass123', 'john@example.com', 'Regular user'),
+    (3, 'jane_smith', 'jane456', 'jane@example.com', 'Power user');
 
 
 --select count(*) from POSTGRES_TABLE;
 --truncate table POSTGRES_TABLE;
-
-
 
 --CREATE SEQUENCE PUT_POSTGRES_TABLE_SEQ MINVALUE 1 START WITH 1 INCREMENT BY 1 CACHE 1;
 CREATE SEQUENCE GET_POSTGRES_TABLE_SEQ MINVALUE 1 START WITH 1 INCREMENT BY 1 CACHE 1;
@@ -50,29 +41,22 @@ commit;
 
 DO $$
 DECLARE
-    row_cnt BIGINT;
+    max_id BIGINT;
     seq_name TEXT := 'put_postgres_table_seq';
     table_name TEXT := 'postgres_table';
 BEGIN
 
-    IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = lower(table_name)) THEN
-        RAISE EXCEPTION 'Table % not found!', table_name;
-    END IF;
+BEGIN
+    -- Берем макс из таблицы
+    SELECT COALESCE(MAX(RLO), 0) INTO max_id FROM table_name;
 
-    EXECUTE format('SELECT COALESCE(MAX(RLO), 0) FROM %I', table_name) INTO row_cnt;
-    
-    EXECUTE format('CREATE SEQUENCE IF NOT EXISTS %I', seq_name);
-
-    IF row_cnt = 0 THEN
-        PERFORM setval(seq_name, 1, false);
+    -- Если в таблице есть данные, двигаем последовательность на этот ID
+    IF max_id > 0 THEN
+        PERFORM setval(seq_name, max_id, true);
     ELSE
-        PERFORM setval(seq_name, row_cnt, true);
+        PERFORM setval(seq_name, 1, false);
     END IF;
-
-    RAISE NOTICE 'Sequence % sync. Current max RLO in table: %. next value: %', 
-                 seq_name, row_cnt, (CASE WHEN row_cnt = 0 THEN 1 ELSE row_cnt + 1 END);
 END $$;
-commit;
 
 /*----
 DROP INDEX if exists POSTGRES_TABLE_PK2;
