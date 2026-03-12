@@ -19,5 +19,5 @@ var_DB_NAME: "postgres"
 var_DB_USER: "postgres"
 var_DB_PASSWORD: "postgresdb"
 var_DB_HOST: "database-server"
-var_DB_PORT: 5432
+var_DB_PORT: 5433
 
