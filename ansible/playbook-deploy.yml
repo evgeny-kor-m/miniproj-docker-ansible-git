@@ -1,8 +1,6 @@
 - name: Deploy using existing docker-compose files
   hosts: slaves 
   become: yes   # sudo privileges
-  vars:
-    deploy_log_file: "~/ansible/log/deploy_events.log"
 
   tasks:
       # Database Configuration Section
