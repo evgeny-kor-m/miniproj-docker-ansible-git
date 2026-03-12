@@ -45,9 +45,6 @@ DECLARE
     seq_name TEXT := 'put_postgres_table_seq';
     table_name TEXT := 'postgres_table';
 BEGIN
-
-BEGIN
-
     SELECT COALESCE(MAX(RLO), 0) INTO max_id FROM POSTGRES_TABLE;
 
     IF max_id > 0 THEN
