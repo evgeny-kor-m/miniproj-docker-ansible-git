@@ -1,6 +1,8 @@
 - name: Install infrastructure 
   hosts: slaves # host group in inventory
   become: yes # (sudo) privileges
+  vars:
+    deploy_log_file: "~/ansible/log/deploy_events.log"
 
   tasks: 
     - name: Dependency installation 
@@ -54,18 +56,84 @@
           }
         dest: /etc/docker/daemon.json 
         mode: '0644' 
+      notify: "Start Docker daemon manually"
 
+    - name: Check Docker version 
+      command: docker --version 
+      register: docker_version 
+      become_user: ansible # Run as ansible user
+
+    - name: Check Storage Driver
+      shell: docker info | grep "Storage Driver"
+      register: storage 
+      become_user: ansible 
+
+    - name: Show Installation Status 
+      debug: # Module to print statements during execution
+        msg: 
+          - "Docker version: {{ docker_version.stdout }}" 
+          - "Storage: {{ storage.stdout }}" 
+
+    - name: Print daemon restart status
+      debug:
+        var: daemon_restart_event
+      when: daemon_restart_event is defined
+
+      # write to log
+    - name: Log events to file
+      lineinfile:
+        path: "{{ deploy_log_file }}"
+        create: yes
+        line: >
+          [{{ ansible_date_time.iso8601 }}] 
+          Host: {{ inventory_hostname }} 
+          DB_Restart: {{ daemon_restart_event.changed | default('skipped') }}
+          Output: {{ (daemon_restart_event.stdout | default('No output'))}}
+
+- name: Clone private repository 
+  hosts: slaves 
+  become: yes 
+  become_user: ansible 
+  
+  tasks: 
+
+    - name: Add GitHub to known_hosts 
+      known_hosts: # Module to manage SSH known_hosts file
+        name: github.com 
+        key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}" # Dynamically fetch GitHub public key
+        state: present 
+
+    - name: Check directory exists 
+      file: 
+        path: "{{ clone_dest }}" 
+        state: directory 
+        owner: "{{ ansible_user_name }}" 
+        group: "{{ ansible_user_name }}" 
+        mode: '0755' 
+
+    - name: Clone repository
+      git: # Module for Git operations
+        repo: "{{ github_repo }}" 
+        dest: "{{ clone_dest }}" 
+        key_file: "{{ github_key_file }}" 
+        accept_hostkey: yes # automatically accept the host key
+        version: "{{ git_branch }}" # branch
+        force: yes # overwrite local files
+      tags: clone_repo 
+
+  handlers:
     - name: Start Docker daemon manually 
       shell: | 
-        pkill dockerd || true # Kill existing Docker process (ignore if not running)
-        sleep 2 # Brief pause to allow process cleanup
-        if ! pgrep -x dockerd > /dev/null; then # Check if Docker is actually stopped
-          nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 & # Start Docker in background
-          sleep 5 # Wait for initialization
+        pkill dockerd || true # Kill Docker process (ignore if not running)
+        sleep 2 
+        if ! pgrep -x dockerd > /dev/null; then # Check if Docker stopped
+          nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 & 
+          sleep 5 
         fi
+      register: daemon_restart_event
       args: # Extra arguments 4 shell module
         executable: /bin/bash # Use Bash
-
+    
     - name: Wait for Docker socket readiness # Task to ensure the service is responsive
       wait_for: # until a condition is met
         path: /var/run/docker.sock # Check if socket file exist
@@ -84,51 +152,3 @@
         mode: '0666' 
         owner: root # Set owner
         group: docker # Set group
-
-    - name: Check Docker version 
-      command: docker --version 
-      register: docker_version 
-      become_user: ansible # Run as ansible user
-
-    - name: Check Storage Driver
-      shell: docker info | grep "Storage Driver"
-      register: storage 
-      changed_when: false # never modifies
-      become_user: ansible 
-
-    - name: Show Installation Status 
-      debug: # Module to print statements during execution
-        msg: 
-          - "Docker version: {{ docker_version.stdout }}" 
-          - "Storage: {{ storage.stdout }}" 
-
-- name: Clone private repository 
-  hosts: slaves 
-  become: yes 
-  become_user: ansible 
-  
-  tasks: 
-
-    - name: Add GitHub to known_hosts 
-      known_hosts: # Module to manage SSH known_hosts file
-        name: github.com 
-        key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}" # Dynamically fetch GitHub public key
-        state: present 
-        
-    - name: Check directory exists 
-      file: 
-        path: "{{ clone_dest }}" 
-        state: directory 
-        owner: "{{ ansible_user_name }}" 
-        group: "{{ ansible_user_name }}" 
-        mode: '0755' 
-
-    - name: Clone repository
-      git: # Module for Git operations
-        repo: "{{ github_repo }}" 
-        dest: "{{ clone_dest }}" 
-        key_file: "{{ github_key_file }}" 
-        accept_hostkey: yes # automatically accept the host key
-        version: "{{ git_branch }}" # branch
-        force: yes # overwrite local files
-      tags: clone_repo 
