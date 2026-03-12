@@ -56,6 +56,10 @@
         mode: '0644' 
       notify: "Start Docker daemon manually"
 
+    # temporay
+    - name: Flush handlers to events
+      meta: flush_handlers
+
     - name: Check Docker version 
       command: docker --version 
       register: docker_version 
