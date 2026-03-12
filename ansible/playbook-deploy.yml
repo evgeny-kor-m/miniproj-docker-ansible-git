@@ -3,7 +3,12 @@
   become: yes   # sudo privileges
 
   tasks:
-      # Database Configuration Section
+    - name: Initialize event variables
+      set_fact:
+        db_restart_event: { "changed": false, "stdout": "No changes (config up to date)" }
+        app_restart_event: { "changed": false, "stdout": "No changes (config up to date)" }
+    
+    # Database Configuration Section
     - name: Prepare environment for Database
       when: "'db_servers' in group_names"  # to 'db_servers' group
       block:
@@ -65,9 +70,9 @@
         line: >
           [{{ ansible_date_time.iso8601 }}] 
           Host: {{ inventory_hostname }} 
-          DB_Restart: {{ db_restart_event.changed | default('skipped') }}
-          App_Restart: {{ app_restart_event.changed | default('skipped') }}
-          Output: {{ (db_restart_event.stdout | default(app_restart_event.stdout | default('No output'))) }}
+          DB_Status: {{ 'RESTARTED' if db_restart_event.changed else 'STABLE' }}
+          App_Status: {{ 'RESTARTED' if app_restart_event.changed else 'STABLE' }}
+          Output: {{ db_restart_event.stdout if db_restart_event.changed else (app_restart_event.stdout if app_restart_event.changed else 'No changes required') }}
 
     # verification section
     - name: Check running containers
