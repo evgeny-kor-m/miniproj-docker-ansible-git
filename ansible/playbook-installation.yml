@@ -63,6 +63,9 @@
         groups: docker 
         append: yes 
 
+    - name: Reset connection to apply changes
+      meta: reset_connection
+
     - name: Fix docker.sock permissions
       file: 
         path: /var/run/docker.sock 
