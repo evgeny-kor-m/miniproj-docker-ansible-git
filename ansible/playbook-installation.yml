@@ -36,6 +36,7 @@
           - docker-compose-plugin # Modern Docker Compose CLI integration
         state: present # Ensure installation
         update_cache: yes # Refresh cache to include newly added Docker repo
+      tags: docker
 
     - name: Create Docker daemon configuration
       copy: 
@@ -45,7 +46,7 @@
             "log-driver": "json-file",
             "log-opts": {
               "max-size": "10m",
-              "max-file": "3"
+              "max-file": "4"
             }
           }
         dest: /etc/docker/daemon.json 
@@ -55,6 +56,20 @@
     # temporay
     - name: Flush handlers to events
       meta: flush_handlers
+
+    - name: Add user Ansible to docker group
+      user: 
+        name: "{{ ansible_user }}"
+        groups: docker 
+        append: yes 
+
+    - name: Fix docker.sock permissions
+      file: 
+        path: /var/run/docker.sock 
+        mode: '0666' 
+        owner: root # Set owner
+        group: docker # Set group
+
 
     - name: Check Docker version 
       command: docker --version 
@@ -130,16 +145,3 @@
         path: /var/run/docker.sock # Check if socket file exist
         state: present # Proceed once the file is available
         timeout: 60 # Stop waiting and fail after 60 seconds
-
-    - name: Add user Ansible to docker group
-      user: 
-        name: "{{ ansible_user }}"
-        groups: docker 
-        append: yes 
-
-    - name: Fix docker.sock permissions
-      file: 
-        path: /var/run/docker.sock 
-        mode: '0666' 
-        owner: root # Set owner
-        group: docker # Set group
