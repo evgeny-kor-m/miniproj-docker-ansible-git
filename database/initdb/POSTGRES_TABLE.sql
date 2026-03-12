@@ -1,7 +1,10 @@
 /*
 CREATE TABLE POSTGRES_TABLE_OLD AS
-select ROWNUM RLO, CUSTOMER_ID,BAR_ID, FA_ID, OU_ID, OU_LEVEL, SUBS, PRODUCT_ID, PARENT_ID, UPDATE_DATE from POSTGRES_TABLE;
+
 */
+
+
+
 
 drop table if EXISTS POSTGRES_TABLE;
 
@@ -27,6 +30,12 @@ CREATE UNIQUE INDEX POSTGRES_TABLE_PK2 ON POSTGRES_TABLE
 TABLESPACE pg_default;
 
 
+INSERT INTO POSTGRES_TABLE (RLO, USERNAME, PASSWORD, EMAIL, REMARKS) VALUES
+    ('1', 'admin', 'admin123', 'admin@example.com', 'System administrator'),
+    ('2', 'john_doe', 'pass123', 'john@example.com', 'Regular user'),
+    ('3', 'jane_smith', 'jane456', 'jane@example.com', 'Power user')
+
+
 --select count(*) from POSTGRES_TABLE;
 --truncate table POSTGRES_TABLE;
 drop sequence if exists PUT_POSTGRES_TABLE_SEQ; 
@@ -39,11 +48,11 @@ commit;
 /*----
 DROP INDEX if exists POSTGRES_TABLE_PK2;
 update POSTGRES_TABLE  set RLO = 0;commit;
-
+*/
 create sequence temp_sequence_x;
 update POSTGRES_TABLE  set RLO = nextval('temp_sequence_x');
 drop sequence temp_sequence_x; commit;
-
+/*
 CREATE UNIQUE INDEX POSTGRES_TABLE_PK2 ON POSTGRES_TABLE (RLO)
 TABLESPACE pg_default;
 commit;

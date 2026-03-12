@@ -149,7 +149,7 @@ ansible-playbook -i /app/ansible/final-inventory.yml /app/ansible/playbook-insta
 ansible -i /app/ansible/final-inventory.yml db_servers -m shell -a "cd /home/ansible/mini-project && docker compose --env-file .env -f database/docker-compose.yml down -v" -b
 ansible -i /app/ansible/final-inventory.yml app_servers -m shell -a "cd /home/ansible/mini-project && docker compose --env-file .env -f app/docker-compose.yml down -v" -b
 
-ansible-playbook -i /app/ansible/final-inventory.yml /app/ansible/deploy.yml
+ansible-playbook -i /app/ansible/final-inventory.yml /app/ansible/playbook-deploy.yml 
 
 ssh -i /home/ansible/.ssh/id_rsa ansible@database-server
 ssh -i /home/ansible/.ssh/id_rsa ansible@application-server
