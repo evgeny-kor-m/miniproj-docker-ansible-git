@@ -38,21 +38,48 @@ INSERT INTO POSTGRES_TABLE (RLO, USERNAME, PASSWORD, EMAIL, REMARKS) VALUES
 
 --select count(*) from POSTGRES_TABLE;
 --truncate table POSTGRES_TABLE;
-drop sequence if exists PUT_POSTGRES_TABLE_SEQ; 
+--drop sequence if exists PUT_POSTGRES_TABLE_SEQ; 
 drop sequence if exists GET_POSTGRES_TABLE_SEQ; 
 
-CREATE SEQUENCE PUT_POSTGRES_TABLE_SEQ MINVALUE 1 START WITH 1 INCREMENT BY 1 CACHE 1;
+--CREATE SEQUENCE PUT_POSTGRES_TABLE_SEQ MINVALUE 1 START WITH 1 INCREMENT BY 1 CACHE 1;
 CREATE SEQUENCE GET_POSTGRES_TABLE_SEQ MINVALUE 1 START WITH 1 INCREMENT BY 1 CACHE 1;
 commit;
+
+
+DO $$
+DECLARE
+    row_cnt BIGINT;
+    seq_name TEXT := 'put_postgres_table_seq';
+    table_name TEXT := 'postgres_table';
+BEGIN
+
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = lower(table_name)) THEN
+        RAISE EXCEPTION 'Table % not found!', table_name;
+    END IF;
+
+    EXECUTE format('SELECT COALESCE(MAX(RLO), 0) FROM %I', table_name) INTO row_cnt;
+    drop sequence if exists PUT_POSTGRES_TABLE_SEQ; 
+    EXECUTE format('CREATE SEQUENCE IF NOT EXISTS %I', seq_name);
+
+    IF row_cnt = 0 THEN
+        PERFORM setval(seq_name, 1, false);
+    ELSE
+        PERFORM setval(seq_name, row_cnt, true);
+    END IF;
+
+    RAISE NOTICE 'Sequence % sync. Current max RLO in table: %. next value: %', 
+                 seq_name, row_cnt, (CASE WHEN row_cnt = 0 THEN 1 ELSE row_cnt + 1 END);
+END $$;
+
 
 /*----
 DROP INDEX if exists POSTGRES_TABLE_PK2;
 update POSTGRES_TABLE  set RLO = 0;commit;
-*/
+
 create sequence temp_sequence_x;
 update POSTGRES_TABLE  set RLO = nextval('temp_sequence_x');
 drop sequence temp_sequence_x; commit;
-/*
+
 CREATE UNIQUE INDEX POSTGRES_TABLE_PK2 ON POSTGRES_TABLE (RLO)
 TABLESPACE pg_default;
 commit;
