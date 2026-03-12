@@ -20,7 +20,9 @@ services:
     restart: always
   
   app-frontend:
-    build: ./app/frontend/Dockerfile
+    build:
+      context: ..
+      dockerfile: ./app/frontend/Dockerfile
     container_name: app-frontend
     restart: always
     environment:
