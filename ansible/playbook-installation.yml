@@ -15,7 +15,8 @@
           - fuse-overlayfs # Userspace overlayfs implementation for Docker storage
         state: present # Ensure these packages are installed
         update_cache: yes # Run 'apt-get update' before installing
-
+      tags: infra
+      
     - name: Add Docker GPG key # Task to verify Docker package authenticity
       apt_key: # Module to manage apt repository keys
         url: https://download.docker.com/linux/ubuntu/gpg # Official Docker GPG key URL
@@ -36,11 +37,6 @@
         state: present # Ensure installation
         update_cache: yes # Refresh cache to include newly added Docker repo
 
-- name: Docker configuration
-  hosts: slaves # host group in inventory
-  become: yes # (sudo) privileges
-
-  tasks: 
     - name: Create Docker daemon configuration
       copy: 
         content: | 
@@ -91,13 +87,6 @@
           Host: {{ inventory_hostname }} 
           DB_Restart: {{ daemon_restart_event.changed | default('skipped') }}
           Output: {{ (daemon_restart_event.stdout | default('No output'))}}
-
-- name: Clone private repository 
-  hosts: slaves 
-  become: yes 
-  become_user: ansible 
-  
-  tasks: 
 
     - name: Add GitHub to known_hosts 
       known_hosts: # Module to manage SSH known_hosts file
