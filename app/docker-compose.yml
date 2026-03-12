@@ -6,7 +6,7 @@ services:
     #   dockerfile: ./app/Dockerfile # Way to Dockerfile inside the context
     # image: app-crm-image # We obviously indicate the name of the image
     image: evgenykorchev/app-crm-image:v01
-    network_mode: "host" 
+    # network_mode: "host" 
     ports:
       - "5000:${APP_PORT}"
     environment:
@@ -15,9 +15,12 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+      - APP_PORT: 5000
     # volumes:
     #   - app-data:/volume-data
     restart: always
+    networks:
+      - app-network
   
   app-frontend:
     build:
@@ -26,7 +29,7 @@ services:
     container_name: app-frontend
     restart: always
     environment:
-      BACKEND_API_HOST: app-crm  # Backend service name
+      BACKEND_API_HOST: application-crm  # Backend service name
       BACKEND_API_PORT: 5000
       FRONTEND_PORT: 7000
       FLASK_ENV: production
@@ -35,7 +38,7 @@ services:
     networks:
       - app-network
     depends_on:
-      - app-crm
+      - application-crm
 
 networks:
   app-network:
