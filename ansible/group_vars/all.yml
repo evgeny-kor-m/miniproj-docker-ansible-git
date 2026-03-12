@@ -8,7 +8,7 @@ ansible_user_name: "ansible"
 
 
 ansible_test: "test"
-deploy_log_file: "/home/ansible/mini-project/ansible/log/deploy_events.log"
+deploy_log_file: "/home/ansible/log/deploy_events.log"
 
 #------common---------------
 project_name: "mini-project"
