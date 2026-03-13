@@ -154,3 +154,6 @@ ansible -i /app/ansible/inventory.yml app_servers -m shell -a "cd /home/ansible/
 ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker logs postgresql | tail -20" -b
 ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker exec postgresql psql -U postgres -d postgres -c '\\dt'" -b
 ```
+
+## firewall
+ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-firewall.yml --check
