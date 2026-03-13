@@ -1,0 +1,179 @@
+- name: Configure UFW Firewall
+  hosts: cluster                            # Target all servers in the 'cluster' inventory group
+  become: yes                               # Run all tasks with sudo/root privileges
+  
+  vars:
+    master_ip: "{{ master_server_ip }}"     # Reference the Management/Ansible server IP
+    db_ip: "{{ db_server_ip }}"             # Reference the PostgreSQL Database server IP
+    app_ip: "{{ app_server_ip }}"           # Reference the Flask/Frontend server IP
+    gw_ip: "{{ gateway_ip }}"               # Reference the Developer/Host Gateway IP
+  
+  tasks:
+    # ==========================================
+    # Common Setup (Applies to all nodes)
+    # ==========================================
+    - name: Install UFW
+      apt:
+        name: ufw
+        state: present                      # Ensure UFW package is installed
+        update_cache: yes                   # Refresh repository cache before installing
+        
+    - name: Reset UFW to clean state
+      ufw:
+        state: reset                        # Delete all existing rules to start fresh
+        
+    - name: Set default policies
+      ufw:
+        direction: "{{ item.direction }}"   # Loop through directions (in/out/routed)
+        policy: "{{ item.policy }}"         # Apply restrictive 'deny' by default
+      loop:
+        - { direction: 'incoming', policy: 'deny' }  # Block all incoming traffic by default
+        - { direction: 'outgoing', policy: 'allow' } # Allow all outgoing traffic (updates, etc.)
+        - { direction: 'routed', policy: 'deny' }    # Disable packet forwarding for security
+        
+    # ==========================================
+    # Database Server Firewall Rules
+    # ==========================================
+    - name: Database Server Firewall Rules
+      when: "'db_servers' in group_names"   # Only run this block on the Database server
+      block:
+        - name: Allow SSH from Master ONLY
+          ufw:
+            rule: allow
+            from_ip: "{{ master_ip }}"      # Restrict SSH access to only the Ansible Master
+            to_ip: "{{ db_ip }}"            # Targeted at the DB server IP
+            to_port: '22'
+            proto: tcp
+            comment: 'SSH from master-server only'
+            
+        - name: Allow PostgreSQL from App Server ONLY
+          ufw:
+            rule: allow
+            from_ip: "{{ app_ip }}"         # Allow only the Application server to connect
+            to_ip: "{{ db_ip }}"
+            to_port: '5432'                 # Standard PostgreSQL port
+            proto: tcp
+            comment: 'PostgreSQL from app-server only'
+            
+        - name: Allow PgAdmin from Host/Gateway
+          ufw:
+            rule: allow
+            from_ip: "{{ gw_ip }}"          # Allow developer access for DB management
+            to_port: '8080'                 # PgAdmin container port
+            proto: tcp
+            comment: 'PgAdmin web access from host'
+            
+        - name: Log denied packets on Database Server
+          ufw:
+            rule: deny
+            direction: in
+            log: yes                        # Enable logging for security audit of blocked attempts
+            comment: 'Log all denied incoming traffic'
+            
+    # ==========================================
+    # Application Server Firewall Rules
+    # ==========================================
+    - name: Application Server Firewall Rules
+      when: "'app_servers' in group_names"  # Only run this block on the App/Web server
+      block:
+        - name: Allow SSH from Master ONLY
+          ufw:
+            rule: allow
+            from_ip: "{{ master_ip }}"      # Restrict SSH access to only the Ansible Master
+            to_ip: "{{ app_ip }}"
+            to_port: '22'
+            proto: tcp
+            comment: 'SSH from master-server only'
+            
+        - name: Allow Flask API from anywhere (public endpoint)
+          ufw:
+            rule: allow
+            to_port: '5000'                 # Open port for Backend API
+            proto: tcp
+            comment: 'Flask API public access'
+            
+        - name: Allow Frontend from anywhere (public endpoint)
+          ufw:
+            rule: allow
+            to_port: '7000'                 # Open port for Frontend Web Interface
+            proto: tcp
+            comment: 'Frontend web access'
+            
+        - name: Allow outgoing to Database Server PostgreSQL
+          ufw:
+            rule: allow
+            direction: out                  # Specific rule for egress traffic to DB
+            to_ip: "{{ db_ip }}"
+            to_port: '5432'
+            proto: tcp
+            comment: 'Outgoing to PostgreSQL on db-server'
+            
+        - name: Restrict outgoing to other ports on DB server
+          ufw:
+            rule: deny
+            direction: out                  # Block App server from seeing other DB server ports
+            to_ip: "{{ db_ip }}"
+            comment: 'Block other traffic to db-server'
+            
+        - name: Log denied packets on Application Server
+          ufw:
+            rule: deny
+            direction: in
+            log: yes                        # Log unauthorized access attempts
+            comment: 'Log all denied incoming traffic'
+            
+    # ==========================================
+    # Master Server Firewall Rules
+    # ==========================================
+    - name: Master Server Firewall Rules
+      when: "'master' in group_names"       # Only run this block on the Ansible Master
+      block:
+        - name: Allow SSH from Host/Gateway (management)
+          ufw:
+            rule: allow
+            from_ip: "{{ gw_ip }}"          # Allow developer to SSH into Master server
+            to_port: '22'
+            proto: tcp
+            comment: 'SSH management from host'
+            
+        - name: Allow outgoing SSH to all slaves
+          ufw:
+            rule: allow
+            direction: out                  # Allow Master to push configurations to Slaves
+            to_port: '22'
+            proto: tcp
+            comment: 'SSH to slave servers'
+            
+        - name: Log denied packets on Master Server
+          ufw:
+            rule: deny
+            direction: in
+            log: yes                        # Audit blocked incoming traffic
+            
+    # ==========================================
+    # Enable UFW (Final Step)
+    # ==========================================
+    - name: Enable UFW firewall
+      ufw:
+        state: enabled                      # Turn the firewall on
+        logging: 'on'                       # Enable system-wide UFW logging
+        
+    - name: Display UFW status
+      command: ufw status numbered          # Run command to see the final rule list
+      register: ufw_status
+      changed_when: false                   # Don't report as 'changed' if just viewing status
+      
+    - name: Show firewall rules
+      debug:
+        msg: "{{ ufw_status.stdout_lines }}" # Print the rules to the Ansible console
+        
+    # ==========================================
+    # Log Configuration Event
+    # ==========================================
+    - name: Log firewall configuration
+      lineinfile:
+        path: /var/log/ansible-firewall.log # Record the deployment event locally
+        line: "{{ ansible_date_time.iso8601 }} - UFW configured on {{ inventory_hostname }} with static IP {{ ansible_host }}"
+        create: yes
+      delegate_to: localhost                # Save this log on the Ansible Master, not the remote host
+      become: no                            # Run as local user

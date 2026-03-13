@@ -86,8 +86,8 @@
 
     # verification section
     - name: Check running containers
-      shell: "docker ps" 
-      # shell: "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+      shell: >
+        {% raw %}docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'{% endraw %}
       register: docker_status 
 
     - name: Display deployment status
