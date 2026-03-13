@@ -1,6 +1,6 @@
 /*
 CREATE TABLE POSTGRES_TABLE_OLD AS
-
+01-init-table-users-sequence
 */
 
 drop table if EXISTS POSTGRES_TABLE;

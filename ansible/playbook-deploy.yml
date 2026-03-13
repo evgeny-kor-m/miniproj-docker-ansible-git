@@ -37,18 +37,27 @@
               # Fetching DB host IP from hostvars for cross-node communication
               # DATABASE_URL=postgresql://{{ var_DB_USER }}:{{ var_DB_PASSWORD }}@{{ hostvars['db-slave-node']['ansible_host'] }}:5433/{{ var_DB_NAME }}
               # DB_HOST={{ hostvars['db-slave-node']['ansible_host'] }}
-              DB_HOST=database-server
+              # DB_HOST=database-server
+              DB_HOST={{ db_server_ip }}
               DB_PORT={{ var_DB_PORT }}
               DB_NAME={{ var_DB_NAME }}
               DB_USER={{ var_DB_USER }}
               DB_PASSWORD={{ var_DB_PASSWORD }}
               APP_PORT={{var_APP_PORT}}
+              FRONTEND_PORT=${var_FRONTEND_PORT}
               PYTHONUNBUFFERED=1
             owner: ansible
             group: ansible
             mode: '0600'
           notify: "Restart app docker"
-
+    - name: Display .env content (debug)
+      command: cat {{ base_dir }}/.env
+      register: env_content
+      changed_when: false
+    - name: Show .env configuration
+      debug:
+        msg: 
+          - "app_servers env: {{ env_content.stdout_lines }}" 
     # temporay
     - name: Flush handlers to events
       meta: flush_handlers
@@ -77,12 +86,14 @@
 
     # verification section
     - name: Check running containers
-      shell: "docker ps" 
+      # shell: "docker ps" 
+      shell: "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
       register: docker_status 
 
     - name: Display deployment status
       debug: 
-        var: docker_status.stdout_lines
+        msg: 
+          - "Docker status: {{ docker_status.stdout_lines }}" 
 
   handlers:
     - name: Restart db docker

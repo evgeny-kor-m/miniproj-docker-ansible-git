@@ -15,6 +15,9 @@ services:
       - ~/.ssh_key/slave_known_hosts:/home/ansible/.ssh/known_hosts
       # (Slave -> GitHub) (ED25519)
       - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
+    networks:
+      project-net:
+        ipv4_address: 172.18.0.20  # ← Static IP address
     depends_on:
       - database-service
 
@@ -34,6 +37,9 @@ services:
       - ~/.ssh_key/slave_known_hosts:/home/ansible/.ssh/known_hosts
       # (Slave -> GitHub) (ED25519)
       - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
+    networks:
+      project-net:
+        ipv4_address: 172.18.0.10  # ← Static IP Address
     depends_on:
       - master-service
 
@@ -48,6 +54,9 @@ services:
       - ~/.ssh_key/master_known_hosts:/home/ansible/.ssh/known_hosts
       # temporary to edit online
       - ./ansible:/app/ansible
+    networks:
+      project-net:
+        ipv4_address: 172.18.0.100  # ← Static IP 
     # command:
     #   - /bin/bash
     #   - -c
@@ -56,6 +65,10 @@ services:
     #     ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-deploy.yml
   
 networks:
-  default:
-    external: true
-    name: project-net
+  project-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1

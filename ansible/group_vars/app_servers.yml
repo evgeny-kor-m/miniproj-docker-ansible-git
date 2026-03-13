@@ -1,1 +1,3 @@
+# Application settings
 var_APP_PORT: "5000"
+var_FRONTEND_PORT: "7000"
