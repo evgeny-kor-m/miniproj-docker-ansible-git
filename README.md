@@ -95,8 +95,11 @@ http://127.0.0.1:5000/healthcheck
 ```
 docker build -t app-frontend-image -f app/backend/Dockerfile .
 docker compose --env-file .env -f ./app/docker-compose.yml up -d    --force-recreate
-docker tag app-crm-image evgenykorchev/app-crm-image:v01
-docker push evgenykorchev/app-crm-image:v01
+
+docker tag app-crm-image evgenykorchev/app-frontend-image:v02
+docker push evgenykorchev/app-frontend-image:v02
+docker tag app-crm-image evgenykorchev/app-crm-image:v02
+docker push evgenykorchev/app-crm-image:v02
 ```
 ## Docker Compose – Database (PostgreSQL + pgAdmin)
 For local testing

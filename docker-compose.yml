@@ -18,8 +18,7 @@ services:
     networks:
       project-net:
         ipv4_address: 172.18.0.20  # ← Static IP address
-    depends_on:
-      - database-service
+
 
   database-service:
     image: evgenykorchev/ansible-slave-image:v02
@@ -40,8 +39,6 @@ services:
     networks:
       project-net:
         ipv4_address: 172.18.0.10  # ← Static IP Address
-    depends_on:
-      - master-service
 
   master-service:
     image: evgenykorchev/ansible-master-image:v02
@@ -57,16 +54,23 @@ services:
     networks:
       project-net:
         ipv4_address: 172.18.0.100  # ← Static IP 
-    # command:
-    #   - /bin/bash
-    #   - -c
-    #   - |
+    depends_on:
+      - database-service
+      - application-service
+    command:
+      bash -c "
+      touch /home/ansible/.ssh/known_hosts &&
+      ssh-keyscan -H database-server >> /home/ansible/.ssh/known_hosts 2>/dev/null &&
+      ssh-keyscan -H application-server >> /home/ansible/.ssh/known_hosts 2>/dev/null &&
+      echo 'Master node is ready' &&
+      sudo /usr/sbin/sshd -D"
     #     ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml &&
     #     ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-deploy.yml
   
 networks:
   project-net:
     driver: bridge
+    name: project-net
     ipam:
       driver: default
       config:

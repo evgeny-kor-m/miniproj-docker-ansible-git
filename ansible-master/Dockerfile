@@ -4,16 +4,16 @@ WORKDIR /app
 
 #COPY requirements.txt .
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y openssh-server \
     sudo \
     python3 python3-pip python3-venv\
-    openssh-client \
     curl \
     vim \
     sshpass \
     net-tools \
     iputils-ping \
     ansible \
+    ufw \
     && rm -rf /var/lib/apt/lists/*
 
 # to remain clean environment use venv for python packages
@@ -25,6 +25,7 @@ RUN useradd -m -s /bin/bash ansible && \
     usermod -aG sudo ansible && \
     echo "ansible:ansible" | chpasswd &&\
     echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    mkdir -p /run/sshd \
     mkdir -p /home/ansible/.ssh
 
 COPY ./ansible ./ansible
@@ -33,4 +34,4 @@ COPY ansible-slave/entrypoint.sh .
 RUN chmod +x entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
 
-CMD ["tail", "-f", "/dev/null"]
+CMD ["/usr/sbin/sshd", "-D"]

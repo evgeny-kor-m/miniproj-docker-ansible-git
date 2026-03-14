@@ -3,10 +3,8 @@ services:
     container_name: app-crm
     # build:
     #   context: ..
-    #   dockerfile: ./app/Dockerfile # Way to Dockerfile inside the context
-    # image: app-crm-image # We obviously indicate the name of the image
-    image: evgenykorchev/app-crm-image:v01
-    # network_mode: "host" 
+    #   dockerfile: ./app/backend/Dockerfile # Way to Dockerfile inside the context
+    image: evgenykorchev/app-crm-image:v02
     ports:
       - "5000:${APP_PORT}"
     environment:
@@ -23,11 +21,11 @@ services:
       - app-network
   
   app-frontend:
-    build:
-      context: ..
-      dockerfile: ./app/frontend/Dockerfile
+    # build:
+    #   context: ..
+    #   dockerfile: ./app/frontend/Dockerfile
     container_name: app-frontend
-    #  image: evgenykorchev/app-frontend-image:v01 # Замените на ваш собранный образ
+    image: evgenykorchev/app-frontend-image:v02 
     restart: always
     environment:
       BACKEND_API_HOST: application-crm  # Backend service name
