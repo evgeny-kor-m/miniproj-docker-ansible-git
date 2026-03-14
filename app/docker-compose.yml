@@ -14,8 +14,12 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - APP_PORT=${APP_PORT}
-    # volumes:
-    #   - app-data:/volume-data
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 2
     restart: always
     networks:
       - app-network
@@ -33,6 +37,11 @@ services:
       FRONTEND_PORT: 7000
     ports:
       - "7000:7000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7000"]
+      interval: 30s
+      timeout: 10s
+      retries: 2
     networks:
       - app-network
     depends_on:

@@ -172,7 +172,7 @@
     # ==========================================
     - name: Log firewall configuration
       lineinfile:
-        path: /var/log/ansible-firewall.log # Record the deployment event locally
+        path: "{{firewall_log_file}}" # Record the deployment event locally
         line: "{{ ansible_date_time.iso8601 }} - UFW configured on {{ inventory_hostname }} with static IP {{ ansible_host }}"
         create: yes
       delegate_to: localhost                # Save this log on the Ansible Master, not the remote host

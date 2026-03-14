@@ -9,7 +9,7 @@ ansible_user_name: "ansible"
 
 ansible_test: "test"
 deploy_log_file: "/home/ansible/log/deploy_events.log"
-
+firewall_log_file: "/home/ansible/log/ansible-firewall.log"
 #------common---------------
 project_name: "mini-project"
 base_dir: "/home/ansible/{{ project_name }}"
