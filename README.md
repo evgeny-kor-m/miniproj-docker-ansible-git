@@ -1,5 +1,7 @@
 # mini-project
 
+![Architectura](./doc/architectura.jpg)
+
 ### Part 1
 
 ## Created a Private Repository with README file - mini-project
@@ -164,6 +166,7 @@ ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-firewall.ym
 ```
 check status:
 ```
+ansible -i /app/ansible/inventory.yml slaves  -m shell -a "ufw status numbered" -b
 ansible -i /app/ansible/inventory.yml db_servers -m shell -a "ufw status numbered" -b
 ansible -i /app/ansible/inventory.yml app_servers  -m shell -a "ufw status numbered" -b
 ```
