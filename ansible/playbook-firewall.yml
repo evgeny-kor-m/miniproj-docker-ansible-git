@@ -27,50 +27,35 @@
         - { direction: 'routed', policy: 'deny' }     
         
     # =============== Database Server Rules ===============
-    - name: Database Server - Allow SSH from Master ONLY
+    - name: Allow SSH from master
       when: "'db_servers' in group_names"
       ufw:
         rule: allow
         direction: in
         from_ip: "{{ master_server_ip }}"
-        to_ip: "{{ db_server_ip }}"
-        to_port: '22'
+        to_port: 22
         proto: tcp
-        comment: 'SSH from master-server only'
       become: yes
-      
-    - name: Database Server - Allow PostgreSQL from App Server ONLY
+
+    - name: Allow PostgreSQL from app
       when: "'db_servers' in group_names"
       ufw:
         rule: allow
         direction: in
         from_ip: "{{ app_server_ip }}"
-        to_ip: "{{ db_server_ip }}"
-        to_port: '5432'
+        to_port: 5432
         proto: tcp
-        comment: 'PostgreSQL from application-server only'
       become: yes
-      
-    - name: Database Server - Allow PgAdmin from Host/Gateway
+
+    - name: Allow PgAdmin from host
       when: "'db_servers' in group_names"
       ufw:
         rule: allow
         direction: in
         from_ip: "{{ gateway_ip }}"
-        to_port: '8080'
+        to_port: 80
         proto: tcp
-        comment: 'PgAdmin web access from host'
-      become: yes
-      
-    - name: Database Server - Log attempt block all incoming
-      when: "'db_servers' in group_names"
-      ufw:
-        rule: deny
-        direction: in
-        log: yes
-        comment: 'Log all denied incoming traffic'
-      become: yes
-      
+      become: yes      
     # =============== Application Server Rules ===============
     - name: Application Server - Allow SSH from Master ONLY
       when: "'app_servers' in group_names"
@@ -78,59 +63,40 @@
         rule: allow
         direction: in
         from_ip: "{{ master_server_ip }}"
-        to_ip: "{{ app_server_ip }}"
-        to_port: '22'
+        to_port: 22
         proto: tcp
         comment: 'SSH from master-server only'
       become: yes
-      
-    - name: Application Server - Allow Flask API (public)
+
+    - name: Application Server - Allow Flask API
       when: "'app_servers' in group_names"
       ufw:
         rule: allow
         direction: in
-        to_port: '5000'
+        to_port: 5000
         proto: tcp
-        comment: 'Flask API public endpoint'
+        comment: 'Flask API endpoint'
       become: yes
-      
-    - name: Application Server - Allow Frontend (public)
+
+    - name: Application Server - Allow Frontend
       when: "'app_servers' in group_names"
       ufw:
         rule: allow
         direction: in
-        to_port: '7000'
+        to_port: 7000
         proto: tcp
         comment: 'Frontend web interface'
       become: yes
-      
-    - name: Application Server - Allow outgoing to PostgreSQL ONLY
+
+    - name: Application Server - Allow outgoing PostgreSQL connection
       when: "'app_servers' in group_names"
       ufw:
         rule: allow
         direction: out
         to_ip: "{{ db_server_ip }}"
-        to_port: '5432'
+        to_port: 5432
         proto: tcp
-        comment: 'Outgoing to PostgreSQL on database-server'
-      become: yes
-      
-    - name: Application Server - Deny other traffic to Database Server
-      when: "'app_servers' in group_names"
-      ufw:
-        rule: deny
-        direction: out
-        to_ip: "{{ db_server_ip }}"
-        comment: 'Block all other traffic to database-server'
-      become: yes
-      
-    - name: Application Server -  Log attempt block all incoming
-      when: "'app_servers' in group_names"
-      ufw:
-        rule: deny
-        direction: in
-        log: yes
-        comment: 'Log all denied incoming traffic'
+        comment: 'Connect to PostgreSQL on database-server'
       become: yes
       
     # =============== Enable UFW on All Servers ===============
