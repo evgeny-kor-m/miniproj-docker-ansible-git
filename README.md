@@ -159,4 +159,11 @@ ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker exec postgr
 ```
 
 ## firewall
+```
 ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-firewall.yml --check
+```
+check status:
+```
+ansible -i /app/ansible/inventory.yml db_servers -m shell -a "ufw status numbered" -b
+ansible -i /app/ansible/inventory.yml app_servers  -m shell -a "ufw status numbered" -b
+```
