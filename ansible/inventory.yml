@@ -7,6 +7,7 @@ all:
           ansible_user: ansible
           ansible_ssh_pass: ansible
           ansible_python_interpreter: /usr/bin/python3
+
     app_servers:
       hosts:
         app-slave-node:
@@ -14,17 +15,18 @@ all:
           ansible_user: ansible
           ansible_ssh_pass: ansible
           ansible_python_interpreter: /usr/bin/python3
+
+    master:
+      hosts:
+        master-node:
+          ansible_connection: local
+          ansible_python_interpreter: /usr/bin/python3
+
     slaves:
       children:
         db_servers:
         app_servers:
-    master:
-      hosts:
-        master-node:
-          ansible_host: master-server
-          ansible_user: ansible
-          ansible_ssh_pass: ansible
-          ansible_python_interpreter: /usr/bin/python3
+
     cluster:
       children:
         master:
