@@ -26,12 +26,12 @@
         - { direction: 'outgoing', policy: 'deny' }  
         - { direction: 'routed', policy: 'deny' }     
     
-    - name: Allow Outgoing Traffic (DNS, HTTP, HTTPS)
+    - name: Outgoing Traffic (DNS, HTTP, HTTPS)
       ufw:
         rule: allow
         direction: out
         to_port: "{{ item }}"
-        comment: 'Allow updates and DNS resolution'
+        comment: 'Allow updates, Docker HUB access, and DNS resolution'
       loop:
         - '53'
         - '80'
