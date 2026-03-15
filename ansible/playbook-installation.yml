@@ -28,13 +28,13 @@
         state: present # Ensure the repository is added to sources.list
 
     - name: Install Docker components
-      apt: # Using apt module again
-        name: # Specific Docker packages to install
+      apt: 
+        name: 
           - docker-ce # Docker Community Edition engine
           - docker-ce-cli # Docker command-line interface
           - containerd.io # Container runtime daemon
           - docker-compose-plugin # Modern Docker Compose CLI integration
-        state: present # Ensure installation
+        state: present 
         update_cache: yes # Refresh cache to include newly added Docker repo
       tags: docker
 
@@ -120,7 +120,7 @@
         mode: '0755' 
 
     - name: Clone repository
-      git: # Module for Git operations
+      git: 
         repo: "{{ github_repo }}" 
         dest: "{{ clone_dest }}" 
         key_file: "{{ github_key_file }}" 
@@ -143,8 +143,8 @@
       args: # Extra arguments 4 shell module
         executable: /bin/bash # Use Bash
     
-    - name: Wait for Docker socket readiness # Task to ensure the service is responsive
-      wait_for: # until a condition is met
+    - name: Wait for Docker socket readiness 
+      wait_for: 
         path: /var/run/docker.sock # Check if socket file exist
-        state: present # Proceed once the file is available
-        timeout: 60 # Stop waiting and fail after 60 seconds
+        state: present 
+        timeout: 60 

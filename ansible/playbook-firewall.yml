@@ -146,7 +146,7 @@
         comment: 'SSH to application-server'
       become: yes
       
-    # =============== Enable UFW on All Servers ===============
+    # =============== Enable UFW on servers ===============
     - name: Enable UFW firewall
       ufw:
         state: enabled
