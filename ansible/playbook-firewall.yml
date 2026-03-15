@@ -35,6 +35,7 @@
         from_ip: "{{ master_server_ip }}"
         to_port: 22
         proto: tcp
+        comment: 'SSH from master-server only'
       become: yes
 
     - name: Allow PostgreSQL from app
@@ -45,6 +46,7 @@
         from_ip: "{{ app_server_ip }}"
         to_port: 5432
         proto: tcp
+        comment: 'From Application server only'
       become: yes
 
     - name: Allow PgAdmin from host
@@ -54,6 +56,7 @@
         direction: in
         from_ip: "{{ gateway_ip }}"
         to_port: 8080
+        comment: 'SSH from Host/Gateway only'
         proto: tcp
       become: yes      
     # =============== Application Server Rules ===============

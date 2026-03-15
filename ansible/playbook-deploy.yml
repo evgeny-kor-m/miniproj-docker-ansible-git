@@ -43,8 +43,8 @@
               DB_NAME={{ var_DB_NAME }}
               DB_USER={{ var_DB_USER }}
               DB_PASSWORD={{ var_DB_PASSWORD }}
-              APP_PORT={{var_APP_PORT}}
-              FRONTEND_PORT=${var_FRONTEND_PORT}
+              APP_PORT={{ var_APP_PORT }}
+              FRONTEND_PORT={{ var_FRONTEND_PORT }}
               PYTHONUNBUFFERED=1
             owner: ansible
             group: ansible

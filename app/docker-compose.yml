@@ -1,9 +1,9 @@
 services:
   application-crm:
     container_name: app-crm
-    # build:
-    #   context: ..
-    #   dockerfile: ./app/backend/Dockerfile # Way to Dockerfile inside the context
+    build:
+      context: ..
+      dockerfile: ./app/backend/Dockerfile # Way to Dockerfile inside the context
     image: evgenykorchev/app-crm-image:v02
     ports:
       - "5000:${APP_PORT}"
@@ -25,9 +25,9 @@ services:
       - app-network
   
   app-frontend:
-    # build:
-    #   context: ..
-    #   dockerfile: ./app/frontend/Dockerfile
+    build:
+      context: ..
+      dockerfile: ./app/frontend/Dockerfile
     container_name: app-frontend
     image: evgenykorchev/app-frontend-image:v02 
     restart: always
