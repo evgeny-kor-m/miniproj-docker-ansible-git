@@ -23,7 +23,7 @@
       become: yes
       loop:
         - { direction: 'incoming', policy: 'deny' }   # Deny all incoming by default
-        - { direction: 'outgoing', policy: 'deny' }  
+        - { direction: 'outgoing', policy: 'allow' }  
         - { direction: 'routed', policy: 'deny' }     
         
     # =============== Database Server Rules ===============
@@ -53,7 +53,7 @@
         rule: allow
         direction: in
         from_ip: "{{ gateway_ip }}"
-        to_port: 80
+        to_port: 8080
         proto: tcp
       become: yes      
     # =============== Application Server Rules ===============

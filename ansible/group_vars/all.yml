@@ -27,6 +27,10 @@ app_server_ip: "172.18.0.20"
 master_server_ip: "172.18.0.100"
 gateway_ip: "172.18.0.1"
 
+# Application settings
+var_APP_PORT: "5000"
+var_FRONTEND_PORT: "7000"
+
 
 
 

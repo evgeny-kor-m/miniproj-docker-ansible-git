@@ -112,7 +112,7 @@ def create_user():
 
 
 if __name__ == '__main__':
-    port = int(os.getenv('FRONTEND_PORT', 7000))
+    port = os.getenv('FRONTEND_PORT')
     logger.info(f"Starting frontend server on port {port}")
     app.run(
         host='0.0.0.0',
