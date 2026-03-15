@@ -23,9 +23,20 @@
       become: yes
       loop:
         - { direction: 'incoming', policy: 'deny' }   # Deny all incoming by default
-        - { direction: 'outgoing', policy: 'allow' }  
+        - { direction: 'outgoing', policy: 'deny' }  
         - { direction: 'routed', policy: 'deny' }     
-        
+    
+    - name: Allow Outgoing Traffic (DNS, HTTP, HTTPS)
+      ufw:
+        rule: allow
+        direction: out
+        to_port: "{{ item }}"
+        comment: 'Allow updates and DNS resolution'
+      loop:
+        - '53'
+        - '80'
+        - '443'
+      become: yes
     # =============== Database Server Rules ===============
     - name: Allow SSH from master
       when: "'db_servers' in group_names"
@@ -54,7 +65,7 @@
       ufw:
         rule: allow
         direction: in
-        from_ip: "{{ gateway_ip }}"
+        from_ip: "{{ gateway_ip }}" # from localhost
         to_port: 8080
         comment: 'SSH from Host/Gateway only'
         proto: tcp
