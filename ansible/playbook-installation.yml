@@ -38,16 +38,15 @@
         update_cache: yes # Refresh cache to include newly added Docker repo
       tags: docker
 
+
+    #  OverlayFS (the default storage driver) The internal Docker daemon attempts to create overlay layers but receives "operation not permitted" from the host kernel.
     - name: Create Docker daemon configuration
       copy: 
         content: | 
           {
             "storage-driver": "fuse-overlayfs",
             "log-driver": "json-file",
-            "log-opts": {
-              "max-size": "10m",
-              "max-file": "4"
-            }
+            "log-opts": { "max-size": "10m", "max-file": "4" }
           }
         dest: /etc/docker/daemon.json 
         mode: '0644' 

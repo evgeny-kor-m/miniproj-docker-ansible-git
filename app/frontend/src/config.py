@@ -3,7 +3,7 @@ Configuration for Flask API connection
 """
 
 # API Configuration
-API_HOST = "127.0.0.1"  # или "localhost"
+API_HOST = "application-crm"  # или "localhost"
 API_PORT = 5000
 
 # API Endpoints

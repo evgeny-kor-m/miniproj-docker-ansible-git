@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # Configuration from environment variables
-API_HOST = os.getenv('BACKEND_API_HOST', 'localhost')
-API_PORT = os.getenv('BACKEND_API_PORT', '5000')
+API_HOST = os.getenv('BACKEND_API_HOST')
+API_PORT = os.getenv('BACKEND_API_PORT')
 API_BASE_URL = f"http://{API_HOST}:{API_PORT}"
 
 logger.info(f"Backend API URL: {API_BASE_URL}")

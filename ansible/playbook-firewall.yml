@@ -1,5 +1,5 @@
 - name: Configure UFW Firewall on All Servers
-  hosts: slaves
+  hosts: cluster
   
   
   tasks:
@@ -23,7 +23,7 @@
       become: yes
       loop:
         - { direction: 'incoming', policy: 'deny' }   # Deny all incoming by default
-        - { direction: 'outgoing', policy: 'allow' }  
+        - { direction: 'outgoing', policy: 'deny' }  
         - { direction: 'routed', policy: 'deny' }     
         
     # =============== Database Server Rules ===============
@@ -97,6 +97,39 @@
         to_port: 5432
         proto: tcp
         comment: 'Connect to PostgreSQL on database-server'
+      become: yes
+
+    # ============ Master Server Rules ============
+    - name: Master Server - Allow SSH from Host/Gateway ONLY
+      when: "'master' in group_names"
+      ufw:
+        rule: allow
+        from_ip: "{{ gateway_ip }}"
+        to_port: '22'
+        proto: tcp
+        comment: 'SSH management from host only'
+      become: yes
+      
+    - name: Master Server - Allow outgoing SSH to Database Server
+      when: "'master' in group_names"
+      ufw:
+        rule: allow
+        direction: out
+        to_ip: "{{ db_server_ip }}"
+        to_port: '22'
+        proto: tcp
+        comment: 'SSH to database-server'
+      become: yes
+      
+    - name: Master Server - Allow outgoing SSH to Application Server
+      when: "'master' in group_names"
+      ufw:
+        rule: allow
+        direction: out
+        to_ip: "{{ app_server_ip }}"
+        to_port: '22'
+        proto: tcp
+        comment: 'SSH to application-server'
       become: yes
       
     # =============== Enable UFW on All Servers ===============

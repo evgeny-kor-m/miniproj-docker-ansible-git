@@ -34,7 +34,7 @@ services:
     environment:
       BACKEND_API_HOST: application-crm  # Backend service name
       BACKEND_API_PORT: 5000
-      FRONTEND_PORT: 7000
+      FRONTEND_PORT: ${FRONTEND_PORT}
     ports:
       - "7000:7000"
     healthcheck:
