@@ -1,0 +1,35 @@
+all:
+  children:
+    db_servers:
+      hosts:
+        db-slave-node:
+          ansible_host: database-server
+          ansible_user: ansible
+          ansible_ssh_pass: ansible
+          ansible_python_interpreter: /usr/bin/python3
+
+    app_servers:
+      hosts:
+        app-slave-node:
+          ansible_host: application-server
+          ansible_user: ansible
+          ansible_ssh_pass: ansible
+          ansible_python_interpreter: /usr/bin/python3
+
+    master:
+      hosts:
+        master-node:
+          ansible_connection: local
+          ansible_python_interpreter: /usr/bin/python3
+          ansible_become_method: sudo  # to run on self
+          ansible_become: yes          # to run on self
+
+    slaves:
+      children:
+        db_servers:
+        app_servers:
+
+    cluster:
+      children:
+        master:
+        slaves:

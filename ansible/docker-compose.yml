@@ -1,0 +1,38 @@
+services:
+  ansible-slave-01:
+    build:
+      context: .. # Assembly context - project root (where Docker-compose.yml is located)
+      dockerfile: ./ansible-slave/Dockerfile # Way to Dockerfile inside the context
+    container_name: ansible-slave-01
+    image: ansible-slave-image # We obviously indicate the name of the image
+    ports:
+      - "${SLV_EXT_PORT}:22"
+    volumes:
+       # (Master -> Slave) 
+      - ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys
+      - ~/.ssh_key/slave_known_hosts:/home/ansible/.ssh/known_hosts
+      # - ~/.ssh_key/etc/ssh:/etc/ssh:ro
+      # (Slave -> GitHub) (ED25519)
+      - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
+
+    #     command: /bin/bash -c "pytest --html=/app/html-reports/report.html --self-contained-html --alluredir=/app/allure-results || true; allure generate --clean /app/allure-results -o /app/allure-reports"
+
+
+  ansible-master-01:
+    build:
+      context: ..
+      dockerfile: ./ansible-master/Dockerfile
+    image: ansible-master-image
+    container_name: ansible-master-01
+    ports:
+      - "${MST_EXT_PORT}:22"
+    volumes:
+      # (Master -> Slave) (RSA)
+      - ~/.ssh_key/id_rsa:/home/ansible/.ssh/id_rsa
+      - ~/.ssh_key/master_known_hosts:/home/ansible/.ssh/known_hosts
+    #     command: /bin/bash -c "pytest --html=/app/html-reports/report.html --self-contained-html --alluredir=/app/allure-results || true; allure generate --clean /app/allure-results -o /app/allure-reports"
+
+    
+networks:
+  default:
+    name: project-net

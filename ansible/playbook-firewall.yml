@@ -1,0 +1,174 @@
+- name: Configure UFW Firewall on All Servers
+  hosts: cluster
+  
+  
+  tasks:
+    # =============== Common Setup (All Servers) ===============
+    - name: Install UFW package
+      apt:
+        name: ufw
+        state: present
+        update_cache: yes
+      become: yes
+      
+    - name: Reset UFW to clean state
+      command: ufw --force reset
+      become: yes
+      changed_when: true
+      
+    - name: Set UFW default policies
+      ufw:
+        direction: "{{ item.direction }}"
+        policy: "{{ item.policy }}"
+      become: yes
+      loop:
+        - { direction: 'incoming', policy: 'deny' }   # Deny all incoming by default
+        - { direction: 'outgoing', policy: 'deny' }  
+        - { direction: 'routed', policy: 'deny' }     
+    
+    - name: Outgoing Traffic (DNS, HTTP, HTTPS)
+      ufw:
+        rule: allow
+        direction: out
+        to_port: "{{ item }}"
+        comment: 'Allow updates, Docker HUB access, and DNS resolution'
+      loop:
+        - '53'
+        - '80'
+        - '443'
+      become: yes
+    # =============== Database Server Rules ===============
+    - name: Allow SSH from master
+      when: "'db_servers' in group_names"
+      ufw:
+        rule: allow
+        direction: in
+        from_ip: "{{ master_server_ip }}"
+        to_port: 22
+        proto: tcp
+        comment: 'SSH from master-server only'
+      become: yes
+
+    - name: Allow PostgreSQL from app
+      when: "'db_servers' in group_names"
+      ufw:
+        rule: allow
+        direction: in
+        from_ip: "{{ app_server_ip }}"
+        to_port: 5432
+        proto: tcp
+        comment: 'From Application server only'
+      become: yes
+
+    - name: Allow PgAdmin from host
+      when: "'db_servers' in group_names"
+      ufw:
+        rule: allow
+        direction: in
+        from_ip: "{{ gateway_ip }}" # from localhost
+        to_port: 8080
+        comment: 'SSH from Host/Gateway only'
+        proto: tcp
+      become: yes      
+    # =============== Application Server Rules ===============
+    - name: Application Server - Allow SSH from Master ONLY
+      when: "'app_servers' in group_names"
+      ufw:
+        rule: allow
+        direction: in
+        from_ip: "{{ master_server_ip }}"
+        to_port: 22
+        proto: tcp
+        comment: 'SSH from master-server only'
+      become: yes
+
+    - name: Application Server - Allow Flask API
+      when: "'app_servers' in group_names"
+      ufw:
+        rule: allow
+        direction: in
+        to_port: 5000
+        proto: tcp
+        comment: 'Flask API endpoint'
+      become: yes
+
+    - name: Application Server - Allow Frontend
+      when: "'app_servers' in group_names"
+      ufw:
+        rule: allow
+        direction: in
+        to_port: 7000
+        proto: tcp
+        comment: 'Frontend web interface'
+      become: yes
+
+    - name: Application Server - Allow outgoing PostgreSQL connection
+      when: "'app_servers' in group_names"
+      ufw:
+        rule: allow
+        direction: out
+        to_ip: "{{ db_server_ip }}"
+        to_port: 5432
+        proto: tcp
+        comment: 'Connect to PostgreSQL on database-server'
+      become: yes
+
+    # ============ Master Server Rules ============
+    - name: Master Server - Allow SSH from Host/Gateway ONLY
+      when: "'master' in group_names"
+      ufw:
+        rule: allow
+        from_ip: "{{ gateway_ip }}"
+        to_port: '22'
+        proto: tcp
+        comment: 'SSH management from host only'
+      become: yes
+      
+    - name: Master Server - Allow outgoing SSH to Database Server
+      when: "'master' in group_names"
+      ufw:
+        rule: allow
+        direction: out
+        to_ip: "{{ db_server_ip }}"
+        to_port: '22'
+        proto: tcp
+        comment: 'SSH to database-server'
+      become: yes
+      
+    - name: Master Server - Allow outgoing SSH to Application Server
+      when: "'master' in group_names"
+      ufw:
+        rule: allow
+        direction: out
+        to_ip: "{{ app_server_ip }}"
+        to_port: '22'
+        proto: tcp
+        comment: 'SSH to application-server'
+      become: yes
+      
+    # =============== Enable UFW on servers ===============
+    - name: Enable UFW firewall
+      ufw:
+        state: enabled
+        logging: 'on'
+      become: yes
+      
+    - name: Display UFW status
+      command: ufw status numbered
+      register: ufw_status
+      changed_when: false
+      become: yes
+      
+    - name: Show firewall rules for verification
+      debug:
+        msg: "{{ ufw_status.stdout_lines }}"
+        
+    # =============== Logging ===============
+    - name: Log firewall configuration event
+      lineinfile:
+        path: /home/ansible/firewall-deployment.log
+        line: "{{ ansible_date_time.iso8601 }} - UFW configured on {{ inventory_hostname }} ({{ ansible_host }})"
+        create: yes
+        mode: '0644'
+      delegate_to: localhost
+      become: no

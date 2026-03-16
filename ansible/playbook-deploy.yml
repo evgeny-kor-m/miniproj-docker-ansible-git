@@ -1,0 +1,109 @@
+- name: Deploy using existing docker-compose files
+  hosts: slaves 
+  become: yes   # sudo privileges
+
+  tasks:
+    - name: Initialize event variables
+      set_fact:
+        db_restart_event: { "changed": false, "stdout": "No changes (config up to date)" }
+        app_restart_event: { "changed": false, "stdout": "No changes (config up to date)" }
+    
+    # Database Configuration Section
+    - name: Prepare environment for Database
+      when: "'db_servers' in group_names"  # to 'db_servers' group
+      block:
+        - name: Create .env file for Database
+          copy: # Generate .env
+            dest: "{{ base_dir }}/.env"
+            content: |
+              POSTGRES_DB={{ var_DB_NAME }}
+              POSTGRES_USER={{ var_DB_USER }}
+              POSTGRES_PASSWORD={{ var_DB_PASSWORD }}
+              PGADMIN_DEFAULT_EMAIL={{ var_PGADMIN_DEFAULT_EMAIL }}
+              PGADMIN_DEFAULT_PASSWORD={{ var_PGADMIN_DEFAULT_PASSWORD }}
+            owner: ansible
+            group: ansible
+            mode: '0600' # permissions: read/write
+          notify: "Restart db docker"
+
+    # Application Configuration Section
+    - name: Prepare environment for Flask Application
+      when: "'app_servers' in group_names"  # only 'app_servers' group
+      block:
+        - name: Create .env file for Application
+          copy: 
+            dest: "{{ base_dir }}/.env"
+            content: |
+              # Fetching DB host IP from hostvars for cross-node communication
+              # DATABASE_URL=postgresql://{{ var_DB_USER }}:{{ var_DB_PASSWORD }}@{{ hostvars['db-slave-node']['ansible_host'] }}:5433/{{ var_DB_NAME }}
+              # DB_HOST={{ hostvars['db-slave-node']['ansible_host'] }}
+              # DB_HOST=database-server
+              DB_HOST={{ db_server_ip }}
+              DB_PORT={{ var_DB_PORT }}
+              DB_NAME={{ var_DB_NAME }}
+              DB_USER={{ var_DB_USER }}
+              DB_PASSWORD={{ var_DB_PASSWORD }}
+              APP_PORT={{ var_APP_PORT }}
+              FRONTEND_PORT={{ var_FRONTEND_PORT }}
+              PYTHONUNBUFFERED=1
+            owner: ansible
+            group: ansible
+            mode: '0600'
+          notify: "Restart app docker"
+    - name: Display .env content (debug)
+      command: cat {{ base_dir }}/.env
+      register: env_content
+      changed_when: false
+    - name: Show .env configuration
+      debug:
+        msg: 
+          - "app_servers env: {{ env_content.stdout_lines }}" 
+    # temporay
+    - name: Flush handlers to events
+      meta: flush_handlers
+
+    # - name: Print DB restart status
+    #   debug:
+    #     var: db_restart_event
+    #   when: db_restart_event is defined
+
+    # - name: Print APP restart status
+    #   debug:
+    #     var: app_restart_event
+    #   when: app_restart_event is defined
+
+      # write to log
+    - name: Log events to file
+      lineinfile:
+        path: "{{ deploy_log_file }}"
+        create: yes
+        line: >
+          [{{ ansible_date_time.iso8601 }}] 
+          Host: {{ inventory_hostname }} 
+          DB_Status: {{ 'RESTARTED' if db_restart_event.changed else 'STABLE' }}
+          App_Status: {{ 'RESTARTED' if app_restart_event.changed else 'STABLE' }}
+          Output: {{ db_restart_event.stdout if db_restart_event.changed else (app_restart_event.stdout if app_restart_event.changed else 'No changes required') }}
+
+    # verification section
+    - name: Check running containers
+      shell: >
+        {% raw %}docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'{% endraw %}
+      register: docker_status 
+
+    - name: Display deployment status
+      debug: 
+        msg: 
+          - "Docker status: {{ docker_status.stdout_lines }}" 
+
+  handlers:
+    - name: Restart db docker
+      shell: "docker compose --env-file .env -f ./database/docker-compose.yml up -d --remove-orphans"  # remove orphan if container changed
+      args:
+        chdir: "{{ base_dir }}"
+      register: db_restart_event
+
+    - name: Restart app docker
+      shell: "docker compose --env-file .env -f ./app/docker-compose.yml up -d --remove-orphans"
+      args:
+        chdir: "{{ base_dir }}"
+      register: app_restart_event

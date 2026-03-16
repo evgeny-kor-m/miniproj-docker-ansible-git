@@ -1,0 +1,79 @@
+services:
+  application-service:
+    image: evgenykorchev/ansible-slave-image:v02
+    container_name: application-server
+    privileged: true           # In order for the nested Docker daemon to start, the main container must be started with the --privileged flag.
+    environment:
+      DOCKER_TLS_CERTDIR: ""   # Disable TLS for simplicity
+    ports:
+      - "127.0.0.1:2221:22"
+      - "127.0.0.1:5000:5000"
+      - "127.0.0.1:7000:7000"
+    volumes:
+       # (Master -> Slave)
+      - ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys
+      - ~/.ssh_key/slave_known_hosts:/home/ansible/.ssh/known_hosts
+      # (Slave -> GitHub) (ED25519)
+      - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
+    networks:
+      project-net:
+        ipv4_address: 172.18.0.20  # ← Static IP address
+
+
+  database-service:
+    image: evgenykorchev/ansible-slave-image:v02
+    container_name: database-server
+    privileged: true           # In order for the nested Docker daemon to start, the main container must be started with the --privileged flag.
+    environment:
+      DOCKER_TLS_CERTDIR: ""   # Disable TLS for simplicity
+    ports:
+      - "127.0.0.1:2222:22"
+      - "127.0.0.1:5433:5432"  # Postgres
+      - "127.0.0.1:8080:80"    # PgAdmin
+    volumes:
+       # (Master -> Slave) 
+      - ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys
+      - ~/.ssh_key/slave_known_hosts:/home/ansible/.ssh/known_hosts
+      # (Slave -> GitHub) (ED25519)
+      - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
+    networks:
+      project-net:
+        ipv4_address: 172.18.0.10  # ← Static IP Address
+
+  master-service:
+    image: evgenykorchev/ansible-master-image:v02
+    container_name: master-server
+    privileged: true 
+    ports:
+      - "127.0.0.1:2023:22"
+    volumes:
+      # (Master -> Slave) (RSA)
+      - ~/.ssh_key/id_rsa:/home/ansible/.ssh/id_rsa
+      - ~/.ssh_key/master_known_hosts:/home/ansible/.ssh/known_hosts
+      # temporary to edit online
+      - ./ansible:/app/ansible
+    networks:
+      project-net:
+        ipv4_address: 172.18.0.100  # ← Static IP 
+    depends_on:
+      - database-service
+      - application-service
+    command:
+      bash -c "
+      touch /home/ansible/.ssh/known_hosts &&
+      ssh-keyscan -H database-server >> /home/ansible/.ssh/known_hosts 2>/dev/null &&
+      ssh-keyscan -H application-server >> /home/ansible/.ssh/known_hosts 2>/dev/null &&
+      echo 'Master node is ready' &&
+      sudo /usr/sbin/sshd -D"
+    #     ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml &&
+    #     ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-deploy.yml
+  
+networks:
+  project-net:
+    driver: bridge
+    name: project-net
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1

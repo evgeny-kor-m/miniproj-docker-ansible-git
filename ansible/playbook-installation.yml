@@ -1,0 +1,150 @@
+- name: Install infrastructure 
+  hosts: slaves # host group in inventory
+  become: yes # (sudo) privileges
+  
+  tasks: 
+    - name: Dependency installation 
+      apt: 
+        name: 
+          - apt-transport-https # Allows apt to use repositories over HTTPS
+          - ca-certificates # Common CA certificates for SSL/TLS verification
+          - curl 
+          - gnupg # GNU Privacy Guard for secure communication
+          - lsb-release # Provides LSB (Linux Standard Base) information
+          - git 
+          - fuse-overlayfs # Userspace overlayfs implementation for Docker storage
+        state: present # Ensure these packages are installed
+        update_cache: yes # Run 'apt-get update' before installing
+      tags: infra
+      
+    - name: Add Docker GPG key # Task to verify Docker package authenticity
+      apt_key: # Module to manage apt repository keys
+        url: https://download.docker.com/linux/ubuntu/gpg # Official Docker GPG key URL
+        state: present 
+
+    - name: Add Docker repository 
+      apt_repository: # Module to manage apt software sources
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable" 
+        state: present # Ensure the repository is added to sources.list
+
+    - name: Install Docker components
+      apt: 
+        name: 
+          - docker-ce # Docker Community Edition engine
+          - docker-ce-cli # Docker command-line interface
+          - containerd.io # Container runtime daemon
+          - docker-compose-plugin # Modern Docker Compose CLI integration
+        state: present 
+        update_cache: yes # Refresh cache to include newly added Docker repo
+      tags: docker
+
+
+    #  OverlayFS (the default storage driver) The internal Docker daemon attempts to create overlay layers but receives "operation not permitted" from the host kernel.
+    - name: Create Docker daemon configuration
+      copy: 
+        content: | 
+          {
+            "storage-driver": "fuse-overlayfs",
+            "log-driver": "json-file",
+            "log-opts": { "max-size": "10m", "max-file": "4" }
+          }
+        dest: /etc/docker/daemon.json 
+        mode: '0644' 
+      notify: "Start Docker daemon manually"
+
+    # temporay
+    - name: Flush handlers to events
+      meta: flush_handlers
+
+    - name: Add user Ansible to docker group
+      user: 
+        name: "{{ ansible_user }}"
+        groups: docker 
+        append: yes 
+
+    - name: Reset connection to apply changes
+      meta: reset_connection
+
+    - name: Fix docker.sock permissions
+      file: 
+        path: /var/run/docker.sock 
+        mode: '0666' 
+        owner: root # Set owner
+        group: docker # Set group
+
+
+    - name: Check Docker version 
+      command: docker --version 
+      register: docker_version 
+      become_user: ansible # Run as ansible user
+
+    - name: Check Storage Driver
+      shell: docker info | grep "Storage Driver"
+      register: storage 
+      become_user: ansible 
+
+    - name: Show Installation Status 
+      debug: # Module to print statements during execution
+        msg: 
+          - "Docker version: {{ docker_version.stdout }}" 
+          - "Storage: {{ storage.stdout }}" 
+
+    # - name: Print daemon restart status
+    #   debug:
+    #     var: daemon_restart_event
+    #   when: daemon_restart_event is defined
+
+      # write to log
+    - name: Log events to file
+      lineinfile:
+        path: "{{ deploy_log_file }}"
+        create: yes
+        line: >
+          [{{ ansible_date_time.iso8601 }}] 
+          Host: {{ inventory_hostname }} 
+          DB_Restart: {{ daemon_restart_event.changed | default('skipped') }}
+          Output: {{ (daemon_restart_event.stdout | default('No output'))}}
+
+    - name: Add GitHub to known_hosts 
+      known_hosts: # Module to manage SSH known_hosts file
+        name: github.com 
+        key: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}" # Dynamically fetch GitHub public key
+        state: present 
+
+    - name: Check directory exists 
+      file: 
+        path: "{{ clone_dest }}" 
+        state: directory 
+        owner: "{{ ansible_user_name }}" 
+        group: "{{ ansible_user_name }}" 
+        mode: '0755' 
+
+    - name: Clone repository
+      git: 
+        repo: "{{ github_repo }}" 
+        dest: "{{ clone_dest }}" 
+        key_file: "{{ github_key_file }}" 
+        accept_hostkey: yes # automatically accept the host key
+        version: "{{ git_branch }}" # branch
+        force: yes # overwrite local files
+        update: yes
+      tags: clone_repo 
+
+  handlers:
+    - name: Start Docker daemon manually 
+      shell: | 
+        pkill dockerd || true # Kill Docker process (ignore if not running)
+        sleep 2 
+        if ! pgrep -x dockerd > /dev/null; then # Check if Docker stopped
+          nohup dockerd --host=unix:///var/run/docker.sock > /var/log/dockerd.log 2>&1 & 
+          sleep 5 
+        fi
+      register: daemon_restart_event
+      args: # Extra arguments 4 shell module
+        executable: /bin/bash # Use Bash
+    
+    - name: Wait for Docker socket readiness 
+      wait_for: 
+        path: /var/run/docker.sock # Check if socket file exist
+        state: present 
+        timeout: 60 

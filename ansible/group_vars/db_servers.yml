@@ -1,0 +1,4 @@
+# --pgadmin-------------
+var_PGADMIN_DEFAULT_EMAIL: "polzovatel@gmail.com"
+var_PGADMIN_DEFAULT_PASSWORD: "pass"
+

@@ -1,0 +1,36 @@
+
+#-----git---------------
+github_repo: "git@github.com:evgeny-kor-m/mini-project.git"
+clone_dest: "/home/ansible/mini-project"
+github_key_file: "/home/ansible/.ssh/id_ed25519"
+git_branch: "worker"
+ansible_user_name: "ansible"
+
+
+ansible_test: "test"
+deploy_log_file: "/home/ansible/log/deploy_events.log"
+firewall_log_file: "/home/ansible/log/ansible-firewall.log"
+#------common---------------
+project_name: "mini-project"
+base_dir: "/home/ansible/{{ project_name }}"
+
+# -------DB--------------
+var_DB_NAME: "postgres"
+var_DB_USER: "postgres"
+var_DB_PASSWORD: "postgresdb"
+var_DB_HOST: "database-server"
+var_DB_PORT: 5432
+
+# Static IP addresses 
+db_server_ip: "172.18.0.10"
+app_server_ip: "172.18.0.20"
+master_server_ip: "172.18.0.100"
+gateway_ip: "172.18.0.1"
+
+# Application settings
+var_APP_PORT: 5000
+var_FRONTEND_PORT: 7000
+
+
+
+

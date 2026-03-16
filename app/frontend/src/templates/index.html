@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🔐 User Management System</h1>
+            <div class="api-status">
+                <span id="api-status-text">Checking API...</span>
+                <span id="api-status-indicator" class="status-indicator"></span>
+            </div>
+        </header>
+
+        <!-- Section 1: Get Users -->
+        <section class="card">
+            <h2>📋 1. Display Users</h2>
+            <div class="form-group">
+                <label for="num_row">Number of users to retrieve:</label>
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="num_row" 
+                        value="10" 
+                        placeholder="Enter number or 'ALL'"
+                    >
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="get_all_checkbox">
+                        Get ALL users
+                    </label>
+                    <button onclick="getUsers()" class="btn btn-primary">
+                        Get Users
+                    </button>
+                </div>
+                <small class="help-text">Enter a number or check "Get ALL" to retrieve all users</small>
+            </div>
+        </section>
+
+        <!-- Section 2: Create User -->
+        <section class="card">
+            <h2>➕ 2. Create New User</h2>
+            <form id="create-user-form" onsubmit="createUser(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="username">Username <span class="required">*</span></label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            required 
+                            placeholder="Enter username"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password <span class="required">*</span></label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            required 
+                            placeholder="Enter password"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email <span class="required">*</span></label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            required 
+                            placeholder="user@example.com"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="remarks">Remarks</label>
+                        <input 
+                            type="text" 
+                            id="remarks" 
+                            placeholder="Optional remarks"
+                        >
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn btn-success">
+                        Create User
+                    </button>
+                    <button type="button" onclick="clearForm()" class="btn btn-secondary">
+                        Clear Form
+                    </button>
+                </div>
+                <small class="help-text"><span class="required">*</span> Required fields</small>
+            </form>
+        </section>
+
+        <!-- Section 3: Results -->
+        <section class="card">
+            <div class="results-header">
+                <h2>📊 Results</h2>
+                <button onclick="clearResults()" class="btn btn-small">
+                    Clear Results
+                </button>
+            </div>
+            <div id="results" class="results-box">
+                <div class="results-empty">No results yet. Perform an action above.</div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>User Management System • Backend API: <code>{{ api_url }}</code></p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
