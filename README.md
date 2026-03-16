@@ -92,6 +92,10 @@ Manuall run application:
 python app/src/app_crm.py
 docker rm -f app-crm && docker rmi -f app-crm-image
 http://127.0.0.1:5000/healthcheck
+
+app-frontend 
+http://127.0.0.1:7000
+
 ```
 ## Docker Compose – Application
 ```
