@@ -17,8 +17,6 @@ services:
       - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
     networks:
       project-net:
-        ipv4_address: 172.18.0.20  # ← Static IP address
-
 
   database-service:
     image: evgenykorchev/ansible-slave-image:v02
@@ -38,7 +36,6 @@ services:
       - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
     networks:
       project-net:
-        ipv4_address: 172.18.0.10  # ← Static IP Address
 
   master-service:
     image: evgenykorchev/ansible-master-image:v02
@@ -50,20 +47,19 @@ services:
       # (Master -> Slave) (RSA)
       - ~/.ssh_key/id_rsa:/home/ansible/.ssh/id_rsa
       - ~/.ssh_key/master_known_hosts:/home/ansible/.ssh/known_hosts
-      # temporary to edit online
-      - ./ansible:/app/ansible
+      - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
+    environment:
+      - REPO_URL=git@github.com:evgeny-kor-m/mini-project.git
     networks:
       project-net:
-        ipv4_address: 172.18.0.100  # ← Static IP 
     depends_on:
       - database-service
       - application-service
-    command:
+    command: >
       bash -c "
       touch /home/ansible/.ssh/known_hosts &&
       ssh-keyscan -H database-server >> /home/ansible/.ssh/known_hosts 2>/dev/null &&
       ssh-keyscan -H application-server >> /home/ansible/.ssh/known_hosts 2>/dev/null &&
-      echo 'Master node is ready' &&
       sudo /usr/sbin/sshd -D"
     #     ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml &&
     #     ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-deploy.yml
@@ -72,8 +68,3 @@ networks:
   project-net:
     driver: bridge
     name: project-net
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.18.0.0/16
-          gateway: 172.18.0.1

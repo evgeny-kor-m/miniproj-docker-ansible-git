@@ -7,6 +7,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y openssh-server \
     sudo \
     python3 python3-pip python3-venv\
+    git \
     curl \
     vim \
     sshpass \
@@ -28,8 +29,8 @@ RUN useradd -m -s /bin/bash ansible && \
     mkdir -p /run/sshd \
     mkdir -p /home/ansible/.ssh
 
-COPY ./ansible ./ansible
-COPY ansible-slave/entrypoint.sh .
+# COPY ./ansible ./ansible
+COPY ansible-master/entrypoint.sh .
 
 RUN chmod +x entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
