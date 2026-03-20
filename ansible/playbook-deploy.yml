@@ -30,13 +30,24 @@
     - name: Prepare environment for Flask Application
       when: "'app_servers' in group_names"  # only 'app_servers' group
       block:
+
+        - name: Get database-server IP    # ← новая задача
+          shell: getent hosts database-server | awk '{print $1}'
+          register: db_ip_result
+          changed_when: false
+
+        - name: Show resolved DB IP        # ← для отладки
+          debug:
+            msg: "database-server IP = {{ db_ip_result.stdout }}"
+
         - name: Create .env file for Application
           copy: 
             dest: "{{ base_dir }}/.env"
             content: |
               # Fetching DB host IP from hostvars for cross-node communication
               # DATABASE_URL=postgresql://{{ var_DB_USER }}:{{ var_DB_PASSWORD }}@{{ hostvars['db-slave-node']['ansible_host'] }}:5433/{{ var_DB_NAME }}
-              DB_HOST={{ hostvars['db-slave-node']['ansible_host'] }}
+              DB_HOST={{ db_ip.stdout }}
+              # DB_HOST={{ hostvars['db-slave-node']['ansible_host'] }} 
               DB_HOST_1={{ db_server_ip }}
               DB_PORT={{ var_DB_PORT }}
               DB_NAME={{ var_DB_NAME }}

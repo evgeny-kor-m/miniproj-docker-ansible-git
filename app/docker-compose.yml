@@ -8,6 +8,8 @@ services:
     ports:
       - "5000:${APP_PORT}"
 
+    extra_hosts:
+      - "database-server:${DB_HOST}"  # ← IP come from .env
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
@@ -24,8 +26,7 @@ services:
     restart: always
     networks:
       - app-network
-      - project-net
-  
+
   app-frontend:
     # build:
     #   context: ..
@@ -52,10 +53,7 @@ services:
 networks:
   app-network:
     driver: bridge
-  project-net:
-    external: true
-    name: project-net
-    
+
 volumes:
   app-data:
     name: app-data
