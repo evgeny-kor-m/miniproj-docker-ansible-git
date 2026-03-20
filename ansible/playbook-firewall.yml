@@ -43,7 +43,7 @@
       ufw:
         rule: allow
         direction: in
-        from_ip: "{{ master_server_ip }}"
+        from_ip: "{{ hostvars['master-node']['ansible_host'] }}"
         to_port: 22
         proto: tcp
         comment: 'SSH from master-server only'
@@ -54,7 +54,7 @@
       ufw:
         rule: allow
         direction: in
-        from_ip: "{{ app_server_ip }}"
+        from_ip: "{{ hostvars['app-slave-node']['ansible_host'] }}"
         to_port: 5432
         proto: tcp
         comment: 'From Application server only'
@@ -76,7 +76,7 @@
       ufw:
         rule: allow
         direction: in
-        from_ip: "{{ master_server_ip }}"
+        from_ip: "{{ hostvars['master-node']['ansible_host'] }}"
         to_port: 22
         proto: tcp
         comment: 'SSH from master-server only'
@@ -107,7 +107,7 @@
       ufw:
         rule: allow
         direction: out
-        to_ip: "{{ db_server_ip }}"
+        to_ip: "{{ hostvars['db-slave-node']['ansible_host'] }}"
         to_port: 5432
         proto: tcp
         comment: 'Connect to PostgreSQL on database-server'
@@ -129,7 +129,7 @@
       ufw:
         rule: allow
         direction: out
-        to_ip: "{{ db_server_ip }}"
+        to_ip: "{{ hostvars['db-slave-node']['ansible_host'] }}"
         to_port: '22'
         proto: tcp
         comment: 'SSH to database-server'
@@ -140,7 +140,7 @@
       ufw:
         rule: allow
         direction: out
-        to_ip: "{{ app_server_ip }}"
+        to_ip: "{{ hostvars['app-slave-node']['ansible_host'] }}"
         to_port: '22'
         proto: tcp
         comment: 'SSH to application-server'

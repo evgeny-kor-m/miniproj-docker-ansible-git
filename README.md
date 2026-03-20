@@ -142,8 +142,11 @@ Run and check playbooks:
 ```
 docker compose --env-file .env config ## check syntaxis
 docker compose --env-file .env up -d   ## --force-recreate   ## --remove-orphans
-ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml --syntax-check
-ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-deploy.yml --check
+
+
+ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml /home/ansible/mini-project/ansible/playbook-installation.yml --syntax-check
+ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml /home/ansible/mini-project/ansible/playbook--deploy.yml --check
+ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml /home/ansible/mini-project/ansible/playbook-firewall.yml
 ```
 Connect to servers:
 ```
@@ -157,7 +160,7 @@ docker exec -it master-server su - ansible
 
 Useble command for example:
 ```
-ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml --tags "clone_repo"
+ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml /home/ansible/mini-project/ansible/playbook-installation.yml --tags "clone_repo"
 ansible -i /app/ansible/inventory.yml db_servers -m shell -a "cd /home/ansible/mini-project && docker compose --env-file .env -f database/docker-compose.yml down -v" -b
 ansible -i /app/ansible/inventory.yml app_servers -m shell -a "cd /home/ansible/mini-project && docker compose --env-file .env -f app/docker-compose.yml down -v" -b
 ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker logs postgresql | tail -20" -b
