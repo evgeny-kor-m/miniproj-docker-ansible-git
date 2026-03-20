@@ -3,6 +3,26 @@
   
   
   tasks:
+      # ── Resolve DNS names to IPs ──
+    - name: Resolve master-server IP
+      shell: getent hosts master-server | awk '{print $1}'
+      register: _master_ip
+      changed_when: false
+
+    - name: Resolve application-server IP
+      shell: getent hosts application-server | awk '{print $1}'
+      register: _app_ip
+      changed_when: false
+
+    - name: Resolve database-server IP
+      shell: getent hosts database-server | awk '{print $1}'
+      register: _db_ip
+      changed_when: false
+
+    - name: Resolve gateway IP
+      shell: ip route | grep default | awk '{print $3}'
+      register: _gateway_ip
+      changed_when: false
     # =============== Common Setup (All Servers) ===============
     - name: Install UFW package
       apt:
@@ -43,7 +63,7 @@
       ufw:
         rule: allow
         direction: in
-        from_ip: "{{ hostvars['master-node']['ansible_host'] }}"
+        from_ip: "{{ _master_ip.stdout }}"
         to_port: 22
         proto: tcp
         comment: 'SSH from master-server only'
@@ -54,7 +74,7 @@
       ufw:
         rule: allow
         direction: in
-        from_ip: "{{ hostvars['app-slave-node']['ansible_host'] }}"
+        from_ip: "{{ _app_ip.stdout }}"
         to_port: 5432
         proto: tcp
         comment: 'From Application server only'
@@ -65,7 +85,7 @@
       ufw:
         rule: allow
         direction: in
-        from_ip: "{{ gateway_ip }}" # from localhost
+        from_ip: "{{ _gateway_ip.stdout }}" # from localhost
         to_port: 8080
         comment: 'SSH from Host/Gateway only'
         proto: tcp
@@ -76,7 +96,7 @@
       ufw:
         rule: allow
         direction: in
-        from_ip: "{{ hostvars['master-node']['ansible_host'] }}"
+        from_ip: "{{ _master_ip.stdout }}"
         to_port: 22
         proto: tcp
         comment: 'SSH from master-server only'
@@ -107,7 +127,7 @@
       ufw:
         rule: allow
         direction: out
-        to_ip: "{{ hostvars['db-slave-node']['ansible_host'] }}"
+        to_ip: "{{ _db_ip.stdout }}"
         to_port: 5432
         proto: tcp
         comment: 'Connect to PostgreSQL on database-server'
@@ -118,7 +138,7 @@
       when: "'master' in group_names"
       ufw:
         rule: allow
-        from_ip: "{{ gateway_ip }}"
+        from_ip: "{{ _gateway_ip.stdout }}"
         to_port: '22'
         proto: tcp
         comment: 'SSH management from host only'
@@ -129,7 +149,7 @@
       ufw:
         rule: allow
         direction: out
-        to_ip: "{{ hostvars['db-slave-node']['ansible_host'] }}"
+        to_ip: "{{ _db_ip.stdout }}"
         to_port: '22'
         proto: tcp
         comment: 'SSH to database-server'
@@ -140,7 +160,7 @@
       ufw:
         rule: allow
         direction: out
-        to_ip: "{{ hostvars['app-slave-node']['ansible_host'] }}"
+        to_ip: "{{ _app_ip.stdout }}"
         to_port: '22'
         proto: tcp
         comment: 'SSH to application-server'
