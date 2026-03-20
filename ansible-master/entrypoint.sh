@@ -35,5 +35,10 @@ su - ansible -c "ansible-playbook \
   -i /home/ansible/mini-project/ansible/inventory.yml \
      /home/ansible/mini-project/ansible/playbook-deploy.yml"
 
+echo "Running firewall playbook..."
+su - ansible -c "ansible-playbook \
+  -i /home/ansible/mini-project/ansible/inventory.yml \
+     /home/ansible/mini-project/ansible/playbook-firewall.yml"
+
 echo "Ansible master ready."
 exec "$@"
