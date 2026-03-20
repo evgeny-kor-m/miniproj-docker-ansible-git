@@ -1,20 +1,16 @@
 #!/bin/bash
+set -e
 
-
+echo "Setting up SSH..."
 chown -R ansible:ansible /home/ansible/.ssh
 chmod 700 /home/ansible/.ssh
 chmod 600 /home/ansible/.ssh/id_rsa
+chmod 600 /home/ansible/.ssh/id_ed25519
 
-
-echo "creating mini-project"
-mkdir -p /home/ansible/mini-project
-
-ssh-keyscan -H github.com >> /home/ansible/.ssh/known_hosts
-ssh-keyscan -H database-server >> /home/ansible/.ssh/known_hosts
-ssh-keyscan -H application-server >> /home/ansible/.ssh/known_hosts
-
-cat /home/ansible/.ssh/known_hosts
-
+echo "Adding hosts to known_hosts..."
+su - ansible -c "ssh-keyscan -H github.com          >> /home/ansible/.ssh/known_hosts"
+su - ansible -c "ssh-keyscan -H database-server     >> /home/ansible/.ssh/known_hosts"
+su - ansible -c "ssh-keyscan -H application-server  >> /home/ansible/.ssh/known_hosts"
 chmod 600 /home/ansible/.ssh/known_hosts
 
 export GIT_SSH_COMMAND="ssh -i /home/ansible/.ssh/id_ed25519 -o StrictHostKeyChecking=no"
@@ -23,15 +19,21 @@ echo "Testing SSH connection to GitHub..."
 ssh -T -i /home/ansible/.ssh/id_ed25519 -o StrictHostKeyChecking=no git@github.com || true
 
 echo "Cloning repository $REPO_URL ..."
-git clone -b ${REPO_BRANCH:-main} $REPO_URL /home/ansible/mini-project
+git clone -b ${REPO_BRANCH:-worker} $REPO_URL /home/ansible/mini-project
+chown -R ansible:ansible /home/ansible/mini-project
+
+echo "Waiting for slaves..."
+sleep 5
 
 echo "Running install playbook..."
-ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml  /home/ansible/mini-project/ansible/playbook-installation.yml
+su - ansible -c "ansible-playbook \
+  -i /home/ansible/mini-project/ansible/inventory.yml \
+     /home/ansible/mini-project/ansible/playbook-installation.yml"
 
 echo "Running deploy playbook..."
-ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml  /home/ansible/mini-project/ansible/playbook-deploy.yml
+su - ansible -c "ansible-playbook \
+  -i /home/ansible/mini-project/ansible/inventory.yml \
+     /home/ansible/mini-project/ansible/playbook-deploy.yml"
 
-
-chmod 600 /home/ansible/.ssh/known_hosts
-echo "ansible master created..."
+echo "Ansible master ready."
 exec "$@"

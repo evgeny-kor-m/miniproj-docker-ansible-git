@@ -25,7 +25,7 @@ services:
       - app-network
   
   app-frontend:
-    build:
+    # build:
     #   context: ..
     #   dockerfile: ./app/frontend/Dockerfile
     # container_name: app-frontend
