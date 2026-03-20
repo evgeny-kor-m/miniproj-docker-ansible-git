@@ -46,7 +46,7 @@
             content: |
               # Fetching DB host IP from hostvars for cross-node communication
               # DATABASE_URL=postgresql://{{ var_DB_USER }}:{{ var_DB_PASSWORD }}@{{ hostvars['db-slave-node']['ansible_host'] }}:5433/{{ var_DB_NAME }}
-              DB_HOST={{ db_ip.stdout }}
+              DB_HOST={{ db_ip_result.stdout }}
               # DB_HOST={{ hostvars['db-slave-node']['ansible_host'] }} 
               DB_HOST_1={{ db_server_ip }}
               DB_PORT={{ var_DB_PORT }}
