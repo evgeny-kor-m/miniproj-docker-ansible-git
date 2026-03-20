@@ -20,10 +20,10 @@ echo "Cloning repository $REPO_URL ..."
 git clone $REPO_URL /home/ansible/mini-project
 
 echo "Running install playbook..."
-ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml  /home/ansible/mini-project/ansible/install.yml
+ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml  /home/ansible/mini-project/ansible/playbook-installation.yml
 
 echo "Running deploy playbook..."
-ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml  /home/ansible/mini-project/ansible/deploy.yml
+ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml  /home/ansible/mini-project/ansible/playbook-deploy.yml
 
 
 chmod 600 /home/ansible/.ssh/known_hosts
