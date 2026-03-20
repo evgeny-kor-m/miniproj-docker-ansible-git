@@ -7,6 +7,10 @@ services:
     image: evgenykorchev/app-crm-image:v02
     ports:
       - "5000:${APP_PORT}"
+
+    extra_hosts:
+      - "database-server:host-gateway"
+
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
@@ -14,7 +18,7 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - APP_PORT=${APP_PORT}
-    
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/healthcheck"]
       interval: 30s

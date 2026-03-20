@@ -17,6 +17,12 @@ services:
       - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
     networks:
       project-net:
+    healthcheck:
+      test: ["CMD-SHELL", "service ssh status || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
 
   database-service:
     image: evgenykorchev/ansible-slave-image:v02
@@ -36,6 +42,12 @@ services:
       - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
     networks:
       project-net:
+    healthcheck:
+      test: ["CMD-SHELL", "service ssh status || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
 
   master-service:
     image: evgenykorchev/ansible-master-image:v02
@@ -54,8 +66,10 @@ services:
     networks:
       project-net:
     depends_on:
-      - database-service
-      - application-service
+      database-service:
+        condition: service_healthy   # ← wait SSH is ready
+      application-service:
+        condition: service_healthy   # ← wait SSH is ready
     command: >
       bash -c "sudo /usr/sbin/sshd -D"
     #     touch /home/ansible/.ssh/known_hosts &&
