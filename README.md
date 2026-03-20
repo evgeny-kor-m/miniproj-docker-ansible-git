@@ -27,9 +27,9 @@ make prerequisite - create net, volume
 mkdir ~/.ssh_key
 mkdir -p ~/.ssh_key/etc/ssh
 ssh-keygen -A -f ~/.ssh_key
-ssh-keygen -t rsa -b 4096 -f ~/.ssh_key/id_rsa -N ""
+ssh-keygen -t rsa -b 4096 -f ~/.ssh_key/id_rsa -N ""  # For connectivity between Master and Slaves
 mv ~/.ssh_key/id_rsa.pub ~/.ssh_key/authorized_keys
-ssh-keygen -t ed25519 -C "ansible-deploy" -f ~/.ssh_key/github_deploy_key -N ""
+ssh-keygen -t ed25519 -C "ansible-deploy" -f ~/.ssh_key/github_deploy_key -N ""  # For github
 mv ~/.ssh_key/github_deploy_key ~/.ssh_key/id_ed25519
 cat github_deploy_key.pub            ### Repository → Settings → Deploy keys → Add deploy key
 touch ~/.ssh_key/master_known_hosts

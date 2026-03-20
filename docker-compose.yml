@@ -46,7 +46,7 @@ services:
     volumes:
       # (Master -> Slave) (RSA)
       - ~/.ssh_key/id_rsa:/home/ansible/.ssh/id_rsa
-      - ~/.ssh_key/master_known_hosts:/home/ansible/.ssh/known_hosts
+      # - ~/.ssh_key/master_known_hosts:/home/ansible/.ssh/known_hosts
       - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
     environment:
       - REPO_URL=git@github.com:evgeny-kor-m/mini-project.git
@@ -56,11 +56,11 @@ services:
       - database-service
       - application-service
     command: >
-      bash -c "
-      touch /home/ansible/.ssh/known_hosts &&
-      ssh-keyscan -H database-server >> /home/ansible/.ssh/known_hosts 2>/dev/null &&
-      ssh-keyscan -H application-server >> /home/ansible/.ssh/known_hosts 2>/dev/null &&
-      sudo /usr/sbin/sshd -D"
+      bash -c "sudo /usr/sbin/sshd -D"
+    #     touch /home/ansible/.ssh/known_hosts &&
+    #     ssh-keyscan -H database-server >> /home/ansible/.ssh/known_hosts 2>/dev/null &&
+    #     ssh-keyscan -H application-server >> /home/ansible/.ssh/known_hosts 2>/dev/null &&
+          # sudo /usr/sbin/sshd -D"
     #     ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml &&
     #     ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-deploy.yml
   

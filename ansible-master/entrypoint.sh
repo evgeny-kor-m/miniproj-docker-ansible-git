@@ -10,6 +10,12 @@ echo "creating mini-project"
 mkdir -p /home/ansible/mini-project
 
 ssh-keyscan -H github.com >> /home/ansible/.ssh/known_hosts
+ssh-keyscan -H database-server >> /home/ansible/.ssh/known_hosts
+ssh-keyscan -H application-server >> /home/ansible/.ssh/known_hosts
+
+cat /home/ansible/.ssh/known_hosts
+
+chmod 600 /home/ansible/.ssh/known_hosts
 
 export GIT_SSH_COMMAND="ssh -i /home/ansible/.ssh/id_ed25519 -o StrictHostKeyChecking=no"
 
