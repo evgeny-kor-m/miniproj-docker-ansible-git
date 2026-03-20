@@ -50,6 +50,7 @@ services:
       - ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519
     environment:
       - REPO_URL=git@github.com:evgeny-kor-m/mini-project.git
+      - REPO_BRANCH=worker
     networks:
       project-net:
     depends_on:

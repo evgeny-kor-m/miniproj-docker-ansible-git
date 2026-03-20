@@ -23,7 +23,7 @@ echo "Testing SSH connection to GitHub..."
 ssh -T -i /home/ansible/.ssh/id_ed25519 -o StrictHostKeyChecking=no git@github.com || true
 
 echo "Cloning repository $REPO_URL ..."
-git clone $REPO_URL /home/ansible/mini-project
+git clone -b ${REPO_BRANCH:-main} $REPO_URL /home/ansible/mini-project
 
 echo "Running install playbook..."
 ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml  /home/ansible/mini-project/ansible/playbook-installation.yml
