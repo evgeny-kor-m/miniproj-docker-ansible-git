@@ -22,9 +22,6 @@ echo "Cloning repository $REPO_URL ..."
 git clone -b ${REPO_BRANCH:-worker} $REPO_URL /home/ansible/mini-project
 chown -R ansible:ansible /home/ansible/mini-project
 
-echo "Waiting for slaves..."
-sleep 5
-
 echo "Running install playbook..."
 su - ansible -c "ansible-playbook \
   -i /home/ansible/mini-project/ansible/inventory.yml \
