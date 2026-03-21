@@ -30,13 +30,14 @@
     - name: Prepare environment for Flask Application
       when: "'app_servers' in group_names"  # only 'app_servers' group
       block:
-
-        - name: Get database-server IP    # ← новая задача
+        # take database-server IP from project-net for extra_hosts in App docker-compose, 
+        # which insert "172.18.0.2 database-server" in /etc/hosts.
+        - name: Get database-server IP    
           shell: getent hosts database-server | awk '{print $1}'
           register: db_ip_result
           changed_when: false
 
-        - name: Show resolved DB IP        # ← для отладки
+        - name: Show resolved DB IP        # ← print database-server IP for 
           debug:
             msg: "database-server IP = {{ db_ip_result.stdout }}"
 
@@ -46,8 +47,8 @@
             content: |
               # Fetching DB host IP from hostvars for cross-node communication
               # DATABASE_URL=postgresql://{{ var_DB_USER }}:{{ var_DB_PASSWORD }}@{{ hostvars['db-slave-node']['ansible_host'] }}:5433/{{ var_DB_NAME }}
-              DB_HOST={{ db_ip_result.stdout }}
-              # DB_HOST={{ hostvars['db-slave-node']['ansible_host'] }} 
+              DB_IP={{ db_ip_result.stdout }}  # IP database-server
+              DB_HOST={{ var_DB_HOST }} 
               DB_PORT={{ var_DB_PORT }}
               DB_NAME={{ var_DB_NAME }}
               DB_USER={{ var_DB_USER }}
