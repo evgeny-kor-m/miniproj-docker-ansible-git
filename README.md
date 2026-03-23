@@ -60,7 +60,7 @@ docker run -d --name ansible-slave-01 \
     -v ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys \
     -v ~/.ssh_key/slave_known_hosts:/home/ansible/.ssh/known_hosts \
     -v ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519 \    
-     ansible-slave-image
+     ansible-slave-image:v02
 ```
 ## Check access from master to slave
 ```
