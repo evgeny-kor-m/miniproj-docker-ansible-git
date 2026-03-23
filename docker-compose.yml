@@ -6,7 +6,7 @@ services:
     environment:
       DOCKER_TLS_CERTDIR: ""   # Disable TLS for simplicity
     ports:
-      - "127.0.0.1:2221:22"
+      # - "127.0.0.1:2221:22"
       - "127.0.0.1:5000:5000"
       - "127.0.0.1:7000:7000"
     volumes:
@@ -31,7 +31,7 @@ services:
     environment:
       DOCKER_TLS_CERTDIR: ""   # Disable TLS for simplicity
     ports:
-      - "127.0.0.1:2222:22"
+      # - "127.0.0.1:2222:22"
       - "127.0.0.1:5433:5432"  # Postgres
       - "127.0.0.1:8080:80"    # PgAdmin
     volumes:
