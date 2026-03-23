@@ -54,7 +54,7 @@ services:
     container_name: master-server
     privileged: true 
     ports:
-      - "127.0.0.1:2023:22"
+      # - "127.0.0.1:2023:22"
     volumes:
       # (Master -> Slave) (RSA)
       - ~/.ssh_key/id_rsa:/home/ansible/.ssh/id_rsa
