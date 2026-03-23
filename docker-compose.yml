@@ -53,7 +53,7 @@ services:
     image: evgenykorchev/ansible-master-image:v02
     container_name: master-server
     privileged: true 
-    ports:
+    # ports:
       # - "127.0.0.1:2023:22"
     volumes:
       # (Master -> Slave) (RSA)

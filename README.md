@@ -173,62 +173,21 @@ ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-firewall.ym
 ```
 check status:
 ```
-ansible -i /app/ansible/inventory.yml slaves  -m shell -a "ufw status numbered" -b
-ansible -i /app/ansible/inventory.yml db_servers -m shell -a "ufw status numbered" -b
 ansible -i /app/ansible/inventory.yml app_servers  -m shell -a "ufw status numbered" -b
 ```
-TASK [Show firewall rules for verification]
+Test:
 ```
-ok: [master-node] => {
-    "msg": [
-        "Status: active",
-        "",
-        "     To                         Action      From",
-        "     --                         ------      ----",
-        "[ 1] 53                         ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 2] 80                         ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 3] 443                        ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 4] 22/tcp                     ALLOW IN    172.18.0.1                 # SSH management from host only",
-        "[ 5] 172.18.0.10 22/tcp         ALLOW OUT   Anywhere                   (out) # SSH to database-server",
-        "[ 6] 172.18.0.20 22/tcp         ALLOW OUT   Anywhere                   (out) # SSH to application-server",
-        "[ 7] 53 (v6)                    ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 8] 80 (v6)                    ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 9] 443 (v6)                   ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution"
-    ]
-}
-ok: [db-slave-node] => {
-    "msg": [
-        "Status: active",
-        "",
-        "     To                         Action      From",
-        "     --                         ------      ----",
-        "[ 1] 53                         ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 2] 80                         ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 3] 443                        ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 4] 22/tcp                     ALLOW IN    172.18.0.100               # SSH from master-server only",
-        "[ 5] 5432/tcp                   ALLOW IN    172.18.0.20                # From Application server only",
-        "[ 6] 8080/tcp                   ALLOW IN    172.18.0.1                 # SSH from Host/Gateway only",
-        "[ 7] 53 (v6)                    ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 8] 80 (v6)                    ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 9] 443 (v6)                   ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution"
-    ]
-}
-ok: [app-slave-node] => {
-    "msg": [
-        "Status: active",
-        "",
-        "     To                         Action      From",
-        "     --                         ------      ----",
-        "[ 1] 53                         ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 2] 80                         ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 3] 443                        ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 4] 22/tcp                     ALLOW IN    172.18.0.100               # SSH from master-server only",
-        "[ 5] 5000/tcp                   ALLOW IN    Anywhere                   # Flask API endpoint",
-        "[ 6] 7000/tcp                   ALLOW IN    Anywhere                   # Frontend web interface",
-        "[ 7] 172.18.0.10 5432/tcp       ALLOW OUT   Anywhere                   (out) # Connect to PostgreSQL on database-server",
-        "[ 8] 53 (v6)                    ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 9] 80 (v6)                    ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[10] 443 (v6)                   ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[11] 5000/tcp (v6)              ALLOW IN    Anywhere (v6)              # Flask API endpoint",
-        "[12] 7000/tcp (v6)              ALLOW IN    Anywhere (v6)              # Frontend web interface"
+check status:
+docker exec -it application-server sudo ufw status numbered
+check ping:
+docker exec -it master-server su - ansible sh -c " ansible app_servers -i /home/ansible/mini-project/ansible/inventory.yml  -m ping"
+remove rule:
+docker exec -it application-server sudo ufw delete 4
+check status:
+docker exec -it application-server sudo ufw status numbered
+check ping:
+docker exec -it master-server su - ansible sh -c " ansible app_servers -i /home/ansible/mini-project/ansible/inventory.yml  -m ping"
+create rule
+docker exec -it application-server sudo ufw allow from 172.18.0.4 to any port 22 proto tcp comment 'SSH from master-server only'
+
 ```
