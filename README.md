@@ -187,6 +187,8 @@ check status:
 docker exec -it application-server sudo ufw status numbered
 check ping:
 docker exec -it master-server su - ansible sh -c " ansible app_servers -i /home/ansible/mini-project/ansible/inventory.yml  -m ping"
+conntrack:
+docker exec application-server sudo conntrack -L -p tcp --dport 22
 create rule
 docker exec -it application-server sudo ufw allow from 172.18.0.4 to any port 22 proto tcp comment 'SSH from master-server only'
 check ping:

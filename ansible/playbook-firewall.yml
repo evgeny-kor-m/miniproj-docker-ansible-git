@@ -43,33 +43,6 @@
       command: ufw --force reset
       changed_when: true
 
-    # ── ufw-docker: inject DOCKER-USER rules into after.rules ──  ← NEW
-    - name: Install ufw-docker rules into after.rules
-      when: "'slaves' in group_names"
-      blockinfile:
-        path: /etc/ufw/after.rules
-        marker: "# {mark} UFW AND DOCKER"
-        create: yes
-        block: |
-          *filter
-          :ufw-user-forward - [0:0]
-          :ufw-docker-logging-deny - [0:0]
-          :DOCKER-USER - [0:0]
-          -A DOCKER-USER -j ufw-user-forward
-          -A DOCKER-USER -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
-          -A DOCKER-USER -m conntrack --ctstate INVALID -j DROP
-          -A DOCKER-USER -i docker0 -o docker0 -j ACCEPT
-          -A DOCKER-USER -j RETURN -s 10.0.0.0/8
-          -A DOCKER-USER -j RETURN -s 172.16.0.0/12
-          -A DOCKER-USER -j RETURN -s 192.168.0.0/16
-          -A DOCKER-USER -j ufw-docker-logging-deny -m conntrack --ctstate NEW -d 10.0.0.0/8
-          -A DOCKER-USER -j ufw-docker-logging-deny -m conntrack --ctstate NEW -d 172.16.0.0/12
-          -A DOCKER-USER -j ufw-docker-logging-deny -m conntrack --ctstate NEW -d 192.168.0.0/16
-          -A DOCKER-USER -j RETURN
-          -A ufw-docker-logging-deny -m limit --limit 3/min --limit-burst 10 -j LOG --log-prefix "[UFW DOCKER BLOCK] "
-          -A ufw-docker-logging-deny -j DROP
-          COMMIT
-
     - name: Set UFW default policies
       ufw:
         direction: "{{ item.direction }}"
@@ -121,17 +94,6 @@
         proto: tcp
         comment: 'pgAdmin from Host/Gateway only'
 
-    # ── ufw route for Docker ports (db slave) ──  ← NEW
-    - name: DB - Allow pgAdmin via ufw route (DOCKER-USER)
-      when: "'db_servers' in group_names"
-      command: ufw route allow proto tcp from any to any port 8080
-      changed_when: true
-
-    - name: DB - Allow Postgres via ufw route (DOCKER-USER)
-      when: "'db_servers' in group_names"
-      command: ufw route allow proto tcp from "{{ _app_ip.stdout }}" to any port 5432
-      changed_when: true
-
     # ── Application Server Rules ──
     - name: Application Server - Allow SSH from Master ONLY
       when: "'app_servers' in group_names"
@@ -170,17 +132,6 @@
         to_port: 5432
         proto: tcp
         comment: 'Connect to PostgreSQL on database-server'
-
-    # ── ufw route for Docker ports (app slave) ──  ← NEW
-    - name: App - Allow Flask via ufw route (DOCKER-USER)
-      when: "'app_servers' in group_names"
-      command: ufw route allow proto tcp from any to any port 5000
-      changed_when: true
-
-    - name: App - Allow Frontend via ufw route (DOCKER-USER)
-      when: "'app_servers' in group_names"
-      command: ufw route allow proto tcp from any to any port 7000
-      changed_when: true
 
     # ── Master Server Rules ──
     - name: Master Server - Allow SSH from Host/Gateway ONLY
