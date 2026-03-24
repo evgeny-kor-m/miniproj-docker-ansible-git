@@ -175,7 +175,7 @@ check status:
 ```
 ansible -i /app/ansible/inventory.yml app_servers  -m shell -a "ufw status numbered" -b
 ```
-Test:
+Test port 22:
 ```
 check status:
 docker exec -it application-server sudo ufw status numbered
@@ -194,4 +194,44 @@ docker exec -it application-server sudo ufw allow from 172.18.0.4 to any port 22
 check ping:
 docker exec -it master-server su - ansible sh -c " ansible app_servers -i /home/ansible/mini-project/ansible/inventory.yml  -m ping"
 
+```
+
+Test port 5000:
+```
+# 1. Create an "external" network outside of RFC1918
+docker network create \
+--driver bridge \
+--subnet 192.0.2.0/24 \
+--gateway 192.0.2.1 \
+test-external
+
+# 2. Connect application-server to this network
+docker network connect test-external application-server
+
+# 3. Run tester only on this network
+docker run -d --name tester \
+--network test-external \
+curlimages/curl sleep 3600
+
+# 4. Find the application-server's IP in test-external
+docker inspect application-server \
+--format '{{range .NetworkSettings.Networks}}{{.NetworkID}} {{.IPAddress}}{{"\n"}}{{end}}'
+# find the line with test-external → for example 192.0.2.2
+
+# 5. Test — should work (FWD rule exists)
+docker exec tester curl http://192.0.2.2:5000/healthcheck
+# → Flask response 
+
+# 6. Remove FWD rule
+docker exec application-server sudo ufw --force route delete allow proto tcp from any to any port 5000
+docker exec application-server sudo conntrack -D -p tcp --dport 5000 2>/dev/null
+
+# 7. Test — should be blocked
+docker exec tester curl --connect-timeout 5 http://192.0.2.2:5000/healthcheck
+# → timeout  [UFW DOCKER BLOCK] in logs
+
+# 8. Clean up after yourself
+docker rm -f tester
+docker network disconnect test-external application-server
+docker network rm test-external
 ```
