@@ -169,7 +169,7 @@ ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker exec postgr
 
 ## firewall
 ```
-ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-firewall.yml --check
+docker exec -it master-server su - ansible sh -c "ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml /home/ansible/mini-project/ansible/playbook-firewall.yml"
 ```
 check status:
 ```
@@ -195,7 +195,7 @@ check ping:
 docker exec -it master-server su - ansible sh -c " ansible app_servers -i /home/ansible/mini-project/ansible/inventory.yml  -m ping"
 
 ```
-
+docker exec -it master-server su - ansible sh -c "ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml /home/ansible/mini-project/ansible/playbook-firewall-fix.yml"
 Test port 5000:
 ```
 # 1. Create an "external" network outside of RFC1918
