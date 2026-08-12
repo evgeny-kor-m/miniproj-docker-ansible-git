@@ -27,9 +27,9 @@ make prerequisite - create net, volume
 mkdir ~/.ssh_key
 mkdir -p ~/.ssh_key/etc/ssh
 ssh-keygen -A -f ~/.ssh_key
-ssh-keygen -t rsa -b 4096 -f ~/.ssh_key/id_rsa -N ""
+ssh-keygen -t rsa -b 4096 -f ~/.ssh_key/id_rsa -N ""  # For connectivity between Master and Slaves
 mv ~/.ssh_key/id_rsa.pub ~/.ssh_key/authorized_keys
-ssh-keygen -t ed25519 -C "ansible-deploy" -f ~/.ssh_key/github_deploy_key -N ""
+ssh-keygen -t ed25519 -C "ansible-deploy" -f ~/.ssh_key/github_deploy_key -N ""  # For github
 mv ~/.ssh_key/github_deploy_key ~/.ssh_key/id_ed25519
 cat github_deploy_key.pub            ### Repository → Settings → Deploy keys → Add deploy key
 touch ~/.ssh_key/master_known_hosts
@@ -60,7 +60,7 @@ docker run -d --name ansible-slave-01 \
     -v ~/.ssh_key/authorized_keys:/home/ansible/.ssh/authorized_keys \
     -v ~/.ssh_key/slave_known_hosts:/home/ansible/.ssh/known_hosts \
     -v ~/.ssh_key/id_ed25519:/home/ansible/.ssh/id_ed25519 \    
-     ansible-slave-image
+     ansible-slave-image:v02
 ```
 ## Check access from master to slave
 ```
@@ -142,8 +142,11 @@ Run and check playbooks:
 ```
 docker compose --env-file .env config ## check syntaxis
 docker compose --env-file .env up -d   ## --force-recreate   ## --remove-orphans
-ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml --syntax-check
-ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-deploy.yml --check
+
+
+ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml /home/ansible/mini-project/ansible/playbook-installation.yml --syntax-check
+ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml /home/ansible/mini-project/ansible/playbook--deploy.yml --check
+ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml /home/ansible/mini-project/ansible/playbook-firewall.yml
 ```
 Connect to servers:
 ```
@@ -157,7 +160,7 @@ docker exec -it master-server su - ansible
 
 Useble command for example:
 ```
-ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-installation.yml --tags "clone_repo"
+ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml /home/ansible/mini-project/ansible/playbook-installation.yml --tags "clone_repo"
 ansible -i /app/ansible/inventory.yml db_servers -m shell -a "cd /home/ansible/mini-project && docker compose --env-file .env -f database/docker-compose.yml down -v" -b
 ansible -i /app/ansible/inventory.yml app_servers -m shell -a "cd /home/ansible/mini-project && docker compose --env-file .env -f app/docker-compose.yml down -v" -b
 ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker logs postgresql | tail -20" -b
@@ -166,66 +169,69 @@ ansible -i /app/ansible/inventory.yml db_servers -m shell -a "docker exec postgr
 
 ## firewall
 ```
-ansible-playbook -i /app/ansible/inventory.yml /app/ansible/playbook-firewall.yml --check
+docker exec -it master-server su - ansible sh -c "ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml /home/ansible/mini-project/ansible/playbook-firewall.yml"
 ```
 check status:
 ```
-ansible -i /app/ansible/inventory.yml slaves  -m shell -a "ufw status numbered" -b
-ansible -i /app/ansible/inventory.yml db_servers -m shell -a "ufw status numbered" -b
 ansible -i /app/ansible/inventory.yml app_servers  -m shell -a "ufw status numbered" -b
 ```
-TASK [Show firewall rules for verification]
+Test port 22:
 ```
-ok: [master-node] => {
-    "msg": [
-        "Status: active",
-        "",
-        "     To                         Action      From",
-        "     --                         ------      ----",
-        "[ 1] 53                         ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 2] 80                         ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 3] 443                        ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 4] 22/tcp                     ALLOW IN    172.18.0.1                 # SSH management from host only",
-        "[ 5] 172.18.0.10 22/tcp         ALLOW OUT   Anywhere                   (out) # SSH to database-server",
-        "[ 6] 172.18.0.20 22/tcp         ALLOW OUT   Anywhere                   (out) # SSH to application-server",
-        "[ 7] 53 (v6)                    ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 8] 80 (v6)                    ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 9] 443 (v6)                   ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution"
-    ]
-}
-ok: [db-slave-node] => {
-    "msg": [
-        "Status: active",
-        "",
-        "     To                         Action      From",
-        "     --                         ------      ----",
-        "[ 1] 53                         ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 2] 80                         ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 3] 443                        ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 4] 22/tcp                     ALLOW IN    172.18.0.100               # SSH from master-server only",
-        "[ 5] 5432/tcp                   ALLOW IN    172.18.0.20                # From Application server only",
-        "[ 6] 8080/tcp                   ALLOW IN    172.18.0.1                 # SSH from Host/Gateway only",
-        "[ 7] 53 (v6)                    ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 8] 80 (v6)                    ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 9] 443 (v6)                   ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution"
-    ]
-}
-ok: [app-slave-node] => {
-    "msg": [
-        "Status: active",
-        "",
-        "     To                         Action      From",
-        "     --                         ------      ----",
-        "[ 1] 53                         ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 2] 80                         ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 3] 443                        ALLOW OUT   Anywhere                   (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 4] 22/tcp                     ALLOW IN    172.18.0.100               # SSH from master-server only",
-        "[ 5] 5000/tcp                   ALLOW IN    Anywhere                   # Flask API endpoint",
-        "[ 6] 7000/tcp                   ALLOW IN    Anywhere                   # Frontend web interface",
-        "[ 7] 172.18.0.10 5432/tcp       ALLOW OUT   Anywhere                   (out) # Connect to PostgreSQL on database-server",
-        "[ 8] 53 (v6)                    ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[ 9] 80 (v6)                    ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[10] 443 (v6)                   ALLOW OUT   Anywhere (v6)              (out) # Allow updates, Docker HUB access, and DNS resolution",
-        "[11] 5000/tcp (v6)              ALLOW IN    Anywhere (v6)              # Flask API endpoint",
-        "[12] 7000/tcp (v6)              ALLOW IN    Anywhere (v6)              # Frontend web interface"
+check status:
+docker exec -it application-server sudo ufw status numbered
+check ping:
+docker exec -it master-server su - ansible sh -c " ansible app_servers -i /home/ansible/mini-project/ansible/inventory.yml  -m ping"
+remove rule:
+docker exec -it application-server sudo ufw delete 4
+check status:
+docker exec -it application-server sudo ufw status numbered
+check ping:
+docker exec -it master-server su - ansible sh -c " ansible app_servers -i /home/ansible/mini-project/ansible/inventory.yml  -m ping"
+conntrack:
+docker exec application-server sudo conntrack -L -p tcp --dport 22
+create rule
+docker exec -it application-server sudo ufw allow from 172.18.0.4 to any port 22 proto tcp comment 'SSH from master-server only'
+check ping:
+docker exec -it master-server su - ansible sh -c " ansible app_servers -i /home/ansible/mini-project/ansible/inventory.yml  -m ping"
+
+```
+docker exec -it master-server su - ansible sh -c "ansible-playbook -i /home/ansible/mini-project/ansible/inventory.yml /home/ansible/mini-project/ansible/playbook-firewall-fix.yml"
+Test port 5000:
+```
+# 1. Create an "external" network outside of RFC1918
+docker network create \
+--driver bridge \
+--subnet 192.0.2.0/24 \
+--gateway 192.0.2.1 \
+test-external
+
+# 2. Connect application-server to this network
+docker network connect test-external application-server
+
+# 3. Run tester only on this network
+docker run -d --name tester \
+--network test-external \
+curlimages/curl sleep 3600
+
+# 4. Find the application-server's IP in test-external
+docker inspect application-server \
+--format '{{range .NetworkSettings.Networks}}{{.NetworkID}} {{.IPAddress}}{{"\n"}}{{end}}'
+# find the line with test-external → for example 192.0.2.2
+
+# 5. Test — should work (FWD rule exists)
+docker exec tester curl http://192.0.2.2:5000/healthcheck
+# → Flask response 
+
+# 6. Remove FWD rule
+docker exec application-server sudo ufw --force route delete allow proto tcp from any to any port 5000
+docker exec application-server sudo conntrack -D -p tcp --dport 5000 2>/dev/null
+
+# 7. Test — should be blocked
+docker exec tester curl --connect-timeout 5 http://192.0.2.2:5000/healthcheck
+# → timeout  [UFW DOCKER BLOCK] in logs
+
+# 8. Clean up after yourself
+docker rm -f tester
+docker network disconnect test-external application-server
+docker network rm test-external
 ```

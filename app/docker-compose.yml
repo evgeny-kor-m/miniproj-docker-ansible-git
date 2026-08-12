@@ -7,6 +7,10 @@ services:
     image: evgenykorchev/app-crm-image:v02
     ports:
       - "5000:${APP_PORT}"
+    # DB_IP - in playbook-deploy take database-server IP from project-net for extra_hosts in App docker-compose, 
+    # which insert "172.18.0.2 database-server" in /etc/hosts.
+    extra_hosts:
+      - "database-server:${DB_IP}"  # ← IP come from .env
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
@@ -14,7 +18,7 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - APP_PORT=${APP_PORT}
-    
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/healthcheck"]
       interval: 30s
@@ -23,9 +27,9 @@ services:
     restart: always
     networks:
       - app-network
-  
+
   app-frontend:
-    build:
+    # build:
     #   context: ..
     #   dockerfile: ./app/frontend/Dockerfile
     # container_name: app-frontend
@@ -50,6 +54,7 @@ services:
 networks:
   app-network:
     driver: bridge
+
 volumes:
   app-data:
     name: app-data
